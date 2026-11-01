@@ -1,0 +1,33 @@
+name: Feature
+description: A unit of work with verifiable acceptance criteria
+title: "[feat]: "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this matter? What problem does it solve?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: >
+        One checklist item per line. Each item must be checkable by looking at
+        code, tests or CI. Avoid vague items like "make it better".
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and hints
+      description: Links, API references, dependencies on other issues.
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this issue explicitly does NOT include.
