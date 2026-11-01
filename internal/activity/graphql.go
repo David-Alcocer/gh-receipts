@@ -55,8 +55,8 @@ func walkBack[T any](first backwardPage[T], keepGoing func(oldest T) bool, previ
 	return items, nil
 }
 
-// searchConnection is a page of search results.
-type searchConnection[T any] struct {
+// SearchConnection is a page of search results.
+type SearchConnection[T any] struct {
 	IssueCount int
 	PageInfo   struct {
 		HasNextPage bool
@@ -65,9 +65,9 @@ type searchConnection[T any] struct {
 	Nodes []T
 }
 
-// searchAll reads every page of a search. It returns a warning when GitHub
+// SearchAll reads every page of a search. It returns a warning when GitHub
 // matched more results than it can return.
-func searchAll[T any](search string, next func(cursor interface{}) (searchConnection[T], error)) ([]T, []string, error) {
+func SearchAll[T any](search string, next func(cursor interface{}) (SearchConnection[T], error)) ([]T, []string, error) {
 	var items []T
 	var cursor interface{}
 	for {

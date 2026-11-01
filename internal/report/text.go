@@ -60,7 +60,7 @@ func Text(w io.Writer, a activity.Activity, info Info) error {
 }
 
 func visibleSections(a activity.Activity, info Info) []section {
-	base := fmt.Sprintf("https://%s/%s/%s", info.Repo.Host, info.Repo.Owner, info.Repo.Name)
+	base := repositoryURL(info.Repo)
 	all := []section{
 		{
 			title:   "WAITING FOR YOUR REVIEW",

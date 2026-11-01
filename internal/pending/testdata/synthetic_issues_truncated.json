@@ -1,0 +1,7 @@
+{"data": {"search": {
+  "issueCount": 1500,
+  "pageInfo": {"hasNextPage": false, "endCursor": "E"},
+  "nodes": [
+    {"number": 2, "title": "Last page", "url": "https://github.com/o/r/issues/2", "body": ""}
+  ]
+}}}

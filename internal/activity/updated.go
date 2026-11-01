@@ -58,8 +58,8 @@ type updatedNode struct {
 func fetchUpdated(ctx context.Context, client GraphQLClient, repo repository.Repository, since time.Time) (Activity, error) {
 	search := fmt.Sprintf("repo:%s/%s updated:>=%s sort:updated-desc", repo.Owner, repo.Name, since.UTC().Format(time.RFC3339))
 
-	nodes, warnings, err := searchAll(search, func(cursor interface{}) (searchConnection[updatedNode], error) {
-		var response struct{ Search searchConnection[updatedNode] }
+	nodes, warnings, err := SearchAll(search, func(cursor interface{}) (SearchConnection[updatedNode], error) {
+		var response struct{ Search SearchConnection[updatedNode] }
 		variables := map[string]interface{}{"search": search, "cursor": cursor}
 		err := client.DoWithContext(ctx, activityQuery, variables, &response)
 		return response.Search, err

@@ -1,0 +1,7 @@
+{"data": {"search": {
+  "issueCount": 26,
+  "pageInfo": {"hasNextPage": false, "endCursor": "E"},
+  "nodes": [
+    {"number": 1, "title": "No commits or decision", "url": "https://github.com/o/r/pull/1", "isDraft": false, "reviewDecision": null, "commits": {"nodes": []}}
+  ]
+}}}
