@@ -23,9 +23,33 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `reviews` | list of Review | Reviews submitted since `since` |
 | `comments` | list of Comment | Conversation and inline comments since `since` |
 | `failedChecks` | list of FailedCheck | Failed checks on default branch commits since `since` |
+| `project` | Project or `null` | Items updated since `since`; `null` when no project is selected or it couldn't be read |
 | `warnings` | list of strings | Reasons the data may be incomplete |
 
 Bots are excluded as authors of PRs, reviews and comments.
+
+### Project
+
+| Field | Type | Description |
+|---|---|---|
+| `number` | number | Project number |
+| `title` | string | Title |
+| `url` | string | Board |
+| `items` | list of Item | The viewer's items first, then the newest |
+
+### Item
+
+`updatedAt` changes with any edit, so it means an item was updated, not that its status moved.
+
+| Field | Type | Description |
+|---|---|---|
+| `number` | number | Issue or PR number; `0` for draft and private items |
+| `title` | string | Title |
+| `status` | string | Current value of the Status field; `No status` when it's empty |
+| `updatedAt` | string | Time in RFC 3339 |
+| `url` | string | Source; the board for items with no page of their own |
+| `assignees` | list of strings | Assignee logins |
+| `assignedToViewer` | boolean | Whether the viewer is an assignee |
 
 ### PullRequest
 

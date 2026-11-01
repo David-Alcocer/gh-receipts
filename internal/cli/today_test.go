@@ -12,6 +12,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/repository"
 
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
+	"github.com/David-Alcocer/gh-receipts/internal/project"
 )
 
 var (
@@ -43,8 +44,17 @@ type todayRun struct {
 	fetchErr error
 	repoErr  error
 	fetched  activity.Activity
-	stdout   bytes.Buffer
-	stderr   bytes.Buffer
+
+	configured    int
+	configuredErr error
+	board         project.Project
+	boardErr      error
+	boardNumber   int
+	boardOwner    string
+	boardViewer   string
+
+	stdout bytes.Buffer
+	stderr bytes.Buffer
 }
 
 func (r *todayRun) execute(t *testing.T, args ...string) error {
@@ -61,6 +71,13 @@ func (r *todayRun) execute(t *testing.T, args ...string) error {
 		fetch: func(_ context.Context, repo repository.Repository, since time.Time) (activity.Activity, error) {
 			r.repo, r.since = repo, since
 			return r.fetched, r.fetchErr
+		},
+		configuredProject: func(context.Context, repository.Repository) (int, error) {
+			return r.configured, r.configuredErr
+		},
+		fetchProject: func(_ context.Context, owner string, number int, _ time.Time, viewer string) (project.Project, error) {
+			r.boardOwner, r.boardNumber, r.boardViewer = owner, number, viewer
+			return r.board, r.boardErr
 		},
 	})
 	cmd.SetOut(&r.stdout)
@@ -235,5 +252,102 @@ func TestTodayWarnsWhenLastRunCannotBeSaved(t *testing.T) {
 	}
 	if !strings.Contains(run.stderr.String(), "disk full") {
 		t.Errorf("stderr = %q, want a warning", run.stderr.String())
+	}
+}
+
+func TestTodayWithoutProjectSkipsTheBoard(t *testing.T) {
+	run := &todayRun{}
+	if err := run.execute(t); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if run.boardNumber != 0 {
+		t.Errorf("board %d was fetched", run.boardNumber)
+	}
+}
+
+func TestTodayProjectFlagBeatsConfiguration(t *testing.T) {
+	run := &todayRun{configured: 3, fetched: activity.Activity{Viewer: "alice"}}
+
+	if err := run.execute(t, "--project", "7"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if run.boardNumber != 7 || run.boardOwner != "o" || run.boardViewer != "alice" {
+		t.Errorf("fetched board %d of %q for %q", run.boardNumber, run.boardOwner, run.boardViewer)
+	}
+}
+
+func TestTodayUsesConfiguredProject(t *testing.T) {
+	run := &todayRun{configured: 3}
+	if err := run.execute(t); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if run.boardNumber != 3 {
+		t.Errorf("board = %d, want 3", run.boardNumber)
+	}
+}
+
+func TestTodayRejectsInvalidProjectFlag(t *testing.T) {
+	for _, value := range []string{"0", "-1"} {
+		run := &todayRun{}
+		err := run.execute(t, "--project", value)
+		if err == nil || !strings.Contains(err.Error(), "--project") {
+			t.Errorf("%s: error = %v, want one that mentions --project", value, err)
+		}
+	}
+}
+
+func TestTodayMissingScopeKeepsTheReportAndTheSession(t *testing.T) {
+	run := &todayRun{
+		configured: 3,
+		boardErr:   project.ErrMissingScope,
+		store:      &fakeStore{last: testNow.Add(-time.Hour), found: true},
+		fetched:    activity.Activity{MergedPRs: []activity.PullRequest{{Number: 1, Title: "One", Author: "bob", URL: "https://x/1"}}},
+	}
+
+	if err := run.execute(t); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(run.stdout.String(), "MERGED") {
+		t.Errorf("the report is missing: %q", run.stdout.String())
+	}
+	if !strings.Contains(run.stderr.String(), "gh auth refresh -s read:project") {
+		t.Errorf("stderr = %q, want the exact fix", run.stderr.String())
+	}
+	if len(run.store.saved) != 0 {
+		t.Errorf("saved = %v, want nothing", run.store.saved)
+	}
+}
+
+func TestTodayStopsOnOtherProjectErrors(t *testing.T) {
+	cause := errors.New("project not found")
+	run := &todayRun{configured: 9, boardErr: cause}
+
+	if err := run.execute(t); !errors.Is(err, cause) {
+		t.Fatalf("error = %v, want it to wrap %v", err, cause)
+	}
+	if len(run.store.saved) != 0 {
+		t.Errorf("saved = %v, want nothing", run.store.saved)
+	}
+}
+
+func TestTodayStopsWhenConfigurationIsInvalid(t *testing.T) {
+	cause := errors.New("invalid receipts.yml")
+	run := &todayRun{configuredErr: cause}
+
+	if err := run.execute(t); !errors.Is(err, cause) {
+		t.Fatalf("error = %v, want it to wrap %v", err, cause)
+	}
+}
+
+func TestTodayJSONIncludesTheProject(t *testing.T) {
+	run := &todayRun{configured: 3, board: project.Project{Number: 3, Title: "Board", Items: []project.Item{}}}
+
+	if err := run.execute(t, "--json"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(run.stdout.String(), `"title": "Board"`) {
+		t.Errorf("stdout = %s", run.stdout.String())
 	}
 }

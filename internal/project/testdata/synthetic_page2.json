@@ -1,0 +1,54 @@
+{
+ "data": {
+  "repositoryOwner": {
+   "__typename": "User",
+   "projectV2": {
+    "title": "Team board",
+    "url": "https://github.com/users/octocat/projects/3",
+    "items": {
+     "pageInfo": {
+      "hasNextPage": false,
+      "endCursor": null
+     },
+     "nodes": [
+      {
+       "updatedAt": "2026-10-01T00:00:00Z",
+       "fieldValueByName": null,
+       "content": {
+        "__typename": "DraftIssue",
+        "title": "Draft idea",
+        "assignees": {
+         "nodes": []
+        }
+       }
+      },
+      {
+       "updatedAt": "2026-10-04T00:00:00Z",
+       "fieldValueByName": {
+        "name": "Review"
+       },
+       "content": null
+      },
+      {
+       "updatedAt": "2026-10-02T00:00:00Z",
+       "fieldValueByName": {
+        "name": "Done"
+       },
+       "content": {
+        "__typename": "DraftIssue",
+        "title": "Assigned draft",
+        "assignees": {
+         "nodes": [
+          {
+           "login": "octocat"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

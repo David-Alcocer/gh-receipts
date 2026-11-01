@@ -16,6 +16,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/repository"
 
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
+	"github.com/David-Alcocer/gh-receipts/internal/project"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files")
@@ -207,7 +208,8 @@ func TestJSONUsesEmptyListsInsteadOfNull(t *testing.T) {
 	if err := JSON(&out, activity.Activity{}, testInfo); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if strings.Contains(out.String(), "null") {
+	// project is the one key that can be null: no project is selected here.
+	if strings.Contains(strings.Replace(out.String(), `"project": null`, "", 1), "null") {
 		t.Errorf("output contains null:\n%s", out.String())
 	}
 }
@@ -278,6 +280,110 @@ func TestTextRemovesControlCharactersFromUntrustedText(t *testing.T) {
 	}
 	if !strings.Contains(got, "evil[2Jtitle with tab") {
 		t.Errorf("unexpected title in %q", got)
+	}
+}
+
+func testBoard(items ...project.Item) *project.Project {
+	return &project.Project{Number: 3, Title: "Board", URL: "https://github.com/orgs/o/projects/3", Items: items}
+}
+
+func TestTextShowsProjectSectionLast(t *testing.T) {
+	info := testInfo
+	info.Project = testBoard(
+		project.Item{Number: 39, Title: "Signup flow", Status: "Review", URL: "https://github.com/o/r/issues/39"},
+		project.Item{Title: "Draft", Status: "No status", URL: "https://github.com/orgs/o/projects/3"},
+	)
+	a := activity.Activity{MergedPRs: []activity.PullRequest{{Number: 1, Title: "One", Author: "bob", URL: "https://x/1"}}}
+
+	var out bytes.Buffer
+	if err := Text(&out, a, info); err != nil {
+		t.Fatal(err)
+	}
+	got := out.String()
+
+	if strings.Index(got, "PROJECT") < strings.Index(got, "MERGED") {
+		t.Errorf("PROJECT should come last:\n%s", got)
+	}
+	for _, want := range []string{"#39 Signup flow  Review", "Draft  No status", "https://github.com/o/r/issues/39"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("output misses %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestTextHidesEmptyProjectAndCountsItAsNews(t *testing.T) {
+	info := testInfo
+	info.Project = testBoard()
+	var empty bytes.Buffer
+	if err := Text(&empty, activity.Activity{}, info); err != nil {
+		t.Fatal(err)
+	}
+	if want := "Nothing new since Thu 1 Oct, 00:00\n"; empty.String() != want {
+		t.Errorf("output = %q, want %q", empty.String(), want)
+	}
+
+	info.Project = testBoard(project.Item{Title: "Only news", Status: "Todo", URL: "https://x/1"})
+	var news bytes.Buffer
+	if err := Text(&news, activity.Activity{}, info); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(news.String(), "Only news") {
+		t.Errorf("output = %q", news.String())
+	}
+}
+
+func TestTextLimitsProjectAndLinksToTheBoard(t *testing.T) {
+	items := make([]project.Item, 12)
+	for i := range items {
+		items[i] = project.Item{Title: "Item", Status: "Todo", URL: "https://x/item"}
+	}
+	info := testInfo
+	info.Project = testBoard(items...)
+
+	var out bytes.Buffer
+	if err := Text(&out, activity.Activity{}, info); err != nil {
+		t.Fatal(err)
+	}
+	if got := out.String(); !strings.Contains(got, "… and 2 more") || !strings.Contains(got, "https://github.com/orgs/o/projects/3") {
+		t.Errorf("unexpected output:\n%s", got)
+	}
+}
+
+func TestTextCleansProjectText(t *testing.T) {
+	info := testInfo
+	info.Project = testBoard(project.Item{Title: "evil\x1b[2J", Status: "bad\x1b]0;", URL: "https://x/1"})
+
+	var out bytes.Buffer
+	if err := Text(&out, activity.Activity{}, info); err != nil {
+		t.Fatal(err)
+	}
+	if strings.ContainsRune(out.String(), 0x1b) {
+		t.Errorf("output keeps an escape character: %q", out.String())
+	}
+}
+
+func TestJSONProjectKey(t *testing.T) {
+	tests := []struct {
+		name    string
+		project *project.Project
+		want    string
+	}{
+		{"not configured", nil, `"project": null`},
+		{"configured", testBoard(), `"project": {`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := testInfo
+			info.Project = tt.project
+			var out bytes.Buffer
+			if err := JSON(&out, activity.Activity{}, info); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(out.String(), tt.want) {
+				t.Errorf("output misses %q:\n%s", tt.want, out.String())
+			}
+		})
 	}
 }
 
