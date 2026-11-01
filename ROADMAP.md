@@ -16,6 +16,7 @@ Goal: replace "hey agent, what's next?" with a verifiable report.
 ## v0.2 — "Is our flow healthy?"
 
 - Acceptance criteria convention + parser + `criteria` debug command (#5)
+- `next` command: your open PRs, reviews and assigned issues with their criteria (#12)
 - `health` command with team-level flow signals (#6)
 
 **Done when:** `health` is reviewed in a team meeting and leads to at least one concrete process change.

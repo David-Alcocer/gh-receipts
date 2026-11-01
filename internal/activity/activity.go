@@ -90,7 +90,7 @@ func FetchWith(ctx context.Context, client GraphQLClient, repo repository.Reposi
 	if err != nil {
 		return Activity{}, fmt.Errorf("fetch updated issues and pull requests: %w", err)
 	}
-	requests, err := fetchReviewRequests(ctx, client, repo)
+	requests, err := FetchReviewRequests(ctx, client, repo)
 	if err != nil {
 		return Activity{}, fmt.Errorf("fetch review requests: %w", err)
 	}

@@ -327,7 +327,7 @@ func TestFetchReviewRequestsAcrossPages(t *testing.T) {
 		requestKey(reviewRequestsQuery, "", "RR1"): "synthetic_review_requests_page2.json",
 	}}
 
-	got, err := fetchReviewRequests(context.Background(), client, testRepo)
+	got, err := FetchReviewRequests(context.Background(), client, testRepo)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

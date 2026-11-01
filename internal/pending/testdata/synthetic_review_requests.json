@@ -1,0 +1,9 @@
+{"data": {"viewer": {"login": "octocat"}, "search": {
+  "issueCount": 3,
+  "pageInfo": {"hasNextPage": false, "endCursor": "E"},
+  "nodes": [
+    {"number": 9, "title": "Newer", "url": "https://github.com/o/r/pull/9", "author": {"__typename": "User", "login": "ana"}},
+    {"number": 7, "title": "From a bot", "url": "https://github.com/o/r/pull/7", "author": {"__typename": "Bot", "login": "dependabot"}},
+    {"number": 3, "title": "Older", "url": "https://github.com/o/r/pull/3", "author": {"__typename": "User", "login": "luis"}}
+  ]
+}}}

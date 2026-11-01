@@ -14,22 +14,22 @@ type reviewRequestNode struct {
 	Author *actor
 }
 
-type reviewRequests struct {
+type ReviewRequests struct {
 	Viewer       string
 	PullRequests []PullRequest
 	Warnings     []string
 }
 
-// fetchReviewRequests returns the authenticated user and the open pull requests
+// FetchReviewRequests returns the authenticated user and the open pull requests
 // requesting their review, directly or through a team.
-func fetchReviewRequests(ctx context.Context, client GraphQLClient, repo repository.Repository) (reviewRequests, error) {
+func FetchReviewRequests(ctx context.Context, client GraphQLClient, repo repository.Repository) (ReviewRequests, error) {
 	search := fmt.Sprintf("repo:%s/%s is:pr is:open review-requested:@me", repo.Owner, repo.Name)
 
 	var viewer string
-	nodes, warnings, err := searchAll(search, func(cursor interface{}) (searchConnection[reviewRequestNode], error) {
+	nodes, warnings, err := SearchAll(search, func(cursor interface{}) (SearchConnection[reviewRequestNode], error) {
 		var response struct {
 			Viewer struct{ Login string }
-			Search searchConnection[reviewRequestNode]
+			Search SearchConnection[reviewRequestNode]
 		}
 		variables := map[string]interface{}{"search": search, "cursor": cursor}
 		err := client.DoWithContext(ctx, reviewRequestsQuery, variables, &response)
@@ -37,7 +37,7 @@ func fetchReviewRequests(ctx context.Context, client GraphQLClient, repo reposit
 		return response.Search, err
 	})
 	if err != nil {
-		return reviewRequests{}, err
+		return ReviewRequests{}, err
 	}
 
 	var pullRequests []PullRequest
@@ -52,5 +52,5 @@ func fetchReviewRequests(ctx context.Context, client GraphQLClient, repo reposit
 			URL:    node.URL,
 		})
 	}
-	return reviewRequests{Viewer: viewer, PullRequests: pullRequests, Warnings: warnings}, nil
+	return ReviewRequests{Viewer: viewer, PullRequests: pullRequests, Warnings: warnings}, nil
 }
