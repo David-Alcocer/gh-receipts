@@ -74,6 +74,18 @@ Requires the GitHub CLI (`gh`) authenticated. Project board features need the `r
 gh auth refresh -s read:project
 ```
 
+### Install from a local clone
+
+From the repo root (requires Go):
+
+```
+go build
+gh extension install .
+gh receipts --version
+```
+
+The installed extension points at this directory, so run `go build` again after each change.
+
 ## How we work
 
 This repo is built the way it recommends working:
