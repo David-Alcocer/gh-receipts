@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "repository": "o/r",
+  "since": "2026-10-01T00:00:00Z",
+  "viewer": "alice",
+  "defaultBranch": "main",
+  "mergedPRs": [
+    {
+      "number": 1,
+      "title": "PR 1",
+      "author": "alice",
+      "url": "https://github.com/o/r/pull/1"
+    }
+  ],
+  "openedPRs": [
+    {
+      "number": 3,
+      "title": "PR 3",
+      "author": "ghost",
+      "url": "https://github.com/o/r/pull/3"
+    }
+  ],
+  "reviewRequests": [
+    {
+      "number": 7,
+      "title": "PR 7",
+      "author": "alice",
+      "url": "https://github.com/o/r/pull/7"
+    },
+    {
+      "number": 9,
+      "title": "PR 9",
+      "author": "ghost",
+      "url": "https://github.com/o/r/pull/9"
+    }
+  ],
+  "reviews": [
+    {
+      "prNumber": 1,
+      "prAuthor": "alice",
+      "reviewer": "boundary",
+      "state": "CHANGES_REQUESTED",
+      "excerpt": "Please split this function into two",
+      "submittedAt": "2026-10-01T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#pullrequestreview-6"
+    },
+    {
+      "prNumber": 1,
+      "prAuthor": "alice",
+      "reviewer": "bob",
+      "state": "APPROVED",
+      "excerpt": "Looks good",
+      "submittedAt": "2026-10-02T01:00:00Z",
+      "url": "https://github.com/o/r/pull/1#pullrequestreview-3"
+    },
+    {
+      "prNumber": 2,
+      "prAuthor": "dependabot",
+      "reviewer": "erin",
+      "state": "APPROVED",
+      "excerpt": "",
+      "submittedAt": "2026-10-02T03:00:00Z",
+      "url": "https://github.com/o/r/pull/1#pullrequestreview-4"
+    }
+  ],
+  "comments": [
+    {
+      "author": "heidi",
+      "excerpt": "note",
+      "createdAt": "2026-10-02T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#issuecomment-6",
+      "parentNumber": 1,
+      "parentAuthor": "alice",
+      "onPullRequest": true,
+      "reviewUrl": ""
+    },
+    {
+      "author": "carol",
+      "excerpt": "First line second 🔴 line xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…",
+      "createdAt": "2026-10-03T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#issuecomment-1",
+      "parentNumber": 1,
+      "parentAuthor": "alice",
+      "onPullRequest": true,
+      "reviewUrl": ""
+    },
+    {
+      "author": "ivan",
+      "excerpt": "inline",
+      "createdAt": "2026-10-06T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#discussion_r3",
+      "parentNumber": 1,
+      "parentAuthor": "alice",
+      "onPullRequest": true,
+      "reviewUrl": ""
+    },
+    {
+      "author": "judy",
+      "excerpt": "inline",
+      "createdAt": "2026-10-01T12:00:00Z",
+      "url": "https://github.com/o/r/pull/1#discussion_r4",
+      "parentNumber": 1,
+      "parentAuthor": "alice",
+      "onPullRequest": true,
+      "reviewUrl": ""
+    },
+    {
+      "author": "dave",
+      "excerpt": "inline",
+      "createdAt": "2026-10-04T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#discussion_r1",
+      "parentNumber": 1,
+      "parentAuthor": "alice",
+      "onPullRequest": true,
+      "reviewUrl": "https://github.com/o/r/pull/1#pullrequestreview-3"
+    },
+    {
+      "author": "grace",
+      "excerpt": "note",
+      "createdAt": "2026-10-05T00:00:00Z",
+      "url": "https://github.com/o/r/pull/4#issuecomment-41",
+      "parentNumber": 4,
+      "parentAuthor": "frank",
+      "onPullRequest": false,
+      "reviewUrl": ""
+    }
+  ],
+  "failedChecks": [
+    {
+      "name": "legacy",
+      "conclusion": "ERROR",
+      "commitSha": "22222222",
+      "url": "https://github.com/o/r/commit/2"
+    },
+    {
+      "name": "boot",
+      "conclusion": "STARTUP_FAILURE",
+      "commitSha": "22222222",
+      "url": "https://github.com/o/r/runs/boot"
+    },
+    {
+      "name": "deploy",
+      "conclusion": "FAILURE",
+      "commitSha": "22222222",
+      "url": "https://ci.example.com/1"
+    },
+    {
+      "name": "slow",
+      "conclusion": "TIMED_OUT",
+      "commitSha": "55555555",
+      "url": "https://github.com/o/r/runs/slow"
+    }
+  ],
+  "warnings": [
+    "search \"repo:o/r updated:>=2026-10-01T00:00:00Z sort:updated-desc\" matched 1500 results, but GitHub only returns 1000"
+  ]
+}

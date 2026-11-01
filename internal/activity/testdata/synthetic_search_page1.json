@@ -32,7 +32,8 @@
         "author": {
          "__typename": "User",
          "login": "alice"
-        }
+        },
+        "bodyText": ""
        },
        {
         "state": "COMMENTED",
@@ -41,7 +42,8 @@
         "author": {
          "__typename": "Bot",
          "login": "copilot"
-        }
+        },
+        "bodyText": "bot text"
        },
        {
         "state": "APPROVED",
@@ -50,7 +52,8 @@
         "author": {
          "__typename": "User",
          "login": "bob"
-        }
+        },
+        "bodyText": "Looks good"
        }
       ]
      },
@@ -128,7 +131,8 @@
         "author": {
          "__typename": "User",
          "login": "erin"
-        }
+        },
+        "bodyText": ""
        }
       ]
      },

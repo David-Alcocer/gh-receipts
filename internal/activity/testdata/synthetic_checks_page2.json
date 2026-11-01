@@ -2,6 +2,7 @@
  "data": {
   "repository": {
    "defaultBranchRef": {
+    "name": "main",
     "target": {
      "history": {
       "pageInfo": {
