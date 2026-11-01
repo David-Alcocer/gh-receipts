@@ -1,0 +1,85 @@
+{
+ "data": {
+  "search": {
+   "issueCount": 1500,
+   "pageInfo": {
+    "hasNextPage": false,
+    "endCursor": null
+   },
+   "nodes": [
+    {
+     "__typename": "Issue",
+     "id": "I4",
+     "number": 4,
+     "title": "Issue 4",
+     "url": "https://github.com/o/r/issues/4",
+     "createdAt": "2026-09-01T00:00:00Z",
+     "author": {
+      "__typename": "User",
+      "login": "frank"
+     },
+     "comments": {
+      "pageInfo": {
+       "hasPreviousPage": true,
+       "startCursor": "C4"
+      },
+      "nodes": [
+       {
+        "url": "https://github.com/o/r/pull/4#issuecomment-40",
+        "bodyText": "note",
+        "createdAt": "2026-09-01T00:00:00Z",
+        "author": {
+         "__typename": "User",
+         "login": "old"
+        }
+       },
+       {
+        "url": "https://github.com/o/r/pull/4#issuecomment-41",
+        "bodyText": "note",
+        "createdAt": "2026-10-05T00:00:00Z",
+        "author": {
+         "__typename": "User",
+         "login": "grace"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "__typename": "PullRequest",
+     "id": "PR5",
+     "number": 5,
+     "title": "PR 5",
+     "url": "https://github.com/o/r/pull/5",
+     "createdAt": "2020-01-01T00:00:00Z",
+     "mergedAt": "2020-01-02T00:00:00Z",
+     "author": {
+      "__typename": "User",
+      "login": "alice"
+     },
+     "reviews": {
+      "pageInfo": {
+       "hasPreviousPage": false,
+       "startCursor": null
+      },
+      "nodes": []
+     },
+     "comments": {
+      "pageInfo": {
+       "hasPreviousPage": false,
+       "startCursor": null
+      },
+      "nodes": []
+     },
+     "reviewThreads": {
+      "pageInfo": {
+       "hasPreviousPage": false,
+       "startCursor": null
+      },
+      "nodes": []
+     }
+    }
+   ]
+  }
+ }
+}

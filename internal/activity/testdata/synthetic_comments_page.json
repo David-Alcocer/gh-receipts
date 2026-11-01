@@ -1,0 +1,32 @@
+{
+ "data": {
+  "node": {
+   "comments": {
+    "pageInfo": {
+     "hasPreviousPage": true,
+     "startCursor": "C1b"
+    },
+    "nodes": [
+     {
+      "url": "https://github.com/o/r/pull/1#issuecomment-5",
+      "bodyText": "note",
+      "createdAt": "2026-09-01T00:00:00Z",
+      "author": {
+       "__typename": "User",
+       "login": "old"
+      }
+     },
+     {
+      "url": "https://github.com/o/r/pull/1#issuecomment-6",
+      "bodyText": "note",
+      "createdAt": "2026-10-02T00:00:00Z",
+      "author": {
+       "__typename": "User",
+       "login": "heidi"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

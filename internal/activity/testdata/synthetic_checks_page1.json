@@ -1,0 +1,96 @@
+{
+ "data": {
+  "repository": {
+   "defaultBranchRef": {
+    "target": {
+     "history": {
+      "pageInfo": {
+       "hasNextPage": true,
+       "endCursor": "H1"
+      },
+      "nodes": [
+       {
+        "id": "C1",
+        "oid": "11111111",
+        "url": "https://github.com/o/r/commit/1",
+        "statusCheckRollup": null
+       },
+       {
+        "id": "C2",
+        "oid": "22222222",
+        "url": "https://github.com/o/r/commit/2",
+        "statusCheckRollup": {
+         "state": "FAILURE",
+         "contexts": {
+          "pageInfo": {
+           "hasNextPage": true,
+           "endCursor": "X1"
+          },
+          "nodes": [
+           {
+            "__typename": "CheckRun",
+            "name": "ok",
+            "conclusion": "SUCCESS",
+            "url": "https://github.com/o/r/runs/ok"
+           },
+           {
+            "__typename": "StatusContext",
+            "context": "legacy",
+            "state": "ERROR",
+            "targetUrl": null
+           }
+          ]
+         }
+        }
+       },
+       {
+        "id": "C3",
+        "oid": "33333333",
+        "url": "https://github.com/o/r/commit/3",
+        "statusCheckRollup": {
+         "state": "SUCCESS",
+         "contexts": {
+          "pageInfo": {
+           "hasNextPage": false,
+           "endCursor": null
+          },
+          "nodes": [
+           {
+            "__typename": "CheckRun",
+            "name": "fine",
+            "conclusion": "SUCCESS",
+            "url": "https://github.com/o/r/runs/fine"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "id": "C4",
+        "oid": "44444444",
+        "url": "https://github.com/o/r/commit/4",
+        "statusCheckRollup": {
+         "state": "PENDING",
+         "contexts": {
+          "pageInfo": {
+           "hasNextPage": false,
+           "endCursor": null
+          },
+          "nodes": [
+           {
+            "__typename": "CheckRun",
+            "name": "running",
+            "conclusion": null,
+            "url": "https://github.com/o/r/runs/running"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "data": {
+  "node": {
+   "comments": {
+    "pageInfo": {
+     "hasPreviousPage": false,
+     "startCursor": null
+    },
+    "nodes": [
+     {
+      "url": "https://github.com/o/r/pull/1#discussion_r4",
+      "bodyText": "inline",
+      "createdAt": "2026-10-01T12:00:00Z",
+      "author": {
+       "__typename": "User",
+       "login": "judy"
+      },
+      "pullRequestReview": null
+     }
+    ]
+   }
+  }
+ }
+}
