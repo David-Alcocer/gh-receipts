@@ -50,35 +50,49 @@ type commitNode struct {
 	}
 }
 
+// branchChecks is the default branch and the failed checks on it.
+type branchChecks struct {
+	Branch string
+	Failed []FailedCheck
+}
+
+type commitPage struct {
+	branch     string
+	commits    []commitNode
+	nextCursor interface{}
+}
+
 // fetchFailedChecks returns the failed checks on default branch commits since
 // the given time. It filters by commit date, so a check that fails later on an
 // older commit isn't reported.
-func fetchFailedChecks(ctx context.Context, client graphQLClient, repo repository.Repository, since time.Time) ([]FailedCheck, error) {
-	var failed []FailedCheck
+func fetchFailedChecks(ctx context.Context, client GraphQLClient, repo repository.Repository, since time.Time) (branchChecks, error) {
+	var result branchChecks
 	var cursor interface{}
 	for {
-		commits, nextCursor, err := fetchCommits(ctx, client, repo, since, cursor)
+		page, err := fetchCommits(ctx, client, repo, since, cursor)
 		if err != nil {
-			return nil, err
+			return branchChecks{}, err
 		}
-		for _, commit := range commits {
+		result.Branch = page.branch
+		for _, commit := range page.commits {
 			checks, err := failedChecksOn(ctx, client, commit)
 			if err != nil {
-				return nil, err
+				return branchChecks{}, err
 			}
-			failed = slices.Concat(failed, checks)
+			result.Failed = slices.Concat(result.Failed, checks)
 		}
-		if nextCursor == nil {
-			return failed, nil
+		if page.nextCursor == nil {
+			return result, nil
 		}
-		cursor = nextCursor
+		cursor = page.nextCursor
 	}
 }
 
-func fetchCommits(ctx context.Context, client graphQLClient, repo repository.Repository, since time.Time, cursor interface{}) ([]commitNode, interface{}, error) {
+func fetchCommits(ctx context.Context, client GraphQLClient, repo repository.Repository, since time.Time, cursor interface{}) (commitPage, error) {
 	var response struct {
 		Repository struct {
 			DefaultBranchRef *struct {
+				Name   string
 				Target struct {
 					History struct {
 						PageInfo struct {
@@ -98,22 +112,23 @@ func fetchCommits(ctx context.Context, client graphQLClient, repo repository.Rep
 		"cursor": cursor,
 	}
 	if err := client.DoWithContext(ctx, checksQuery, variables, &response); err != nil {
-		return nil, nil, err
+		return commitPage{}, err
 	}
 
 	// An empty repository has no default branch.
 	branch := response.Repository.DefaultBranchRef
 	if branch == nil {
-		return nil, nil, nil
+		return commitPage{}, nil
 	}
 	history := branch.Target.History
-	if !history.PageInfo.HasNextPage {
-		return history.Nodes, nil, nil
+	page := commitPage{branch: branch.Name, commits: history.Nodes}
+	if history.PageInfo.HasNextPage {
+		page.nextCursor = history.PageInfo.EndCursor
 	}
-	return history.Nodes, history.PageInfo.EndCursor, nil
+	return page, nil
 }
 
-func failedChecksOn(ctx context.Context, client graphQLClient, commit commitNode) ([]FailedCheck, error) {
+func failedChecksOn(ctx context.Context, client GraphQLClient, commit commitNode) ([]FailedCheck, error) {
 	rollup := commit.StatusCheckRollup
 	if rollup == nil || rollup.State == rollupStateSuccess {
 		return nil, nil

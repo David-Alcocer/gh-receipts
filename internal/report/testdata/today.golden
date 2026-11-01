@@ -1,0 +1,23 @@
+Since Thu 1 Oct, 00:00 (last session)
+
+WAITING FOR YOUR REVIEW
+  #7 PR 7 (alice)  https://github.com/o/r/pull/7
+  #9 PR 9 (ghost)  https://github.com/o/r/pull/9
+
+NEW COMMENTS ON YOUR PRS
+  #1 "inline" (ivan)                                                          https://github.com/o/r/pull/1#discussion_r3
+  #1 "inline" (dave)                                                          https://github.com/o/r/pull/1#discussion_r1
+  #1 "First line second 🔴 line xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…" (carol)  https://github.com/o/r/pull/1#issuecomment-1
+  #1 Approved: "Looks good" (bob)                                             https://github.com/o/r/pull/1#pullrequestreview-3
+  #1 "note" (heidi)                                                           https://github.com/o/r/pull/1#issuecomment-6
+  #1 "inline" (judy)                                                          https://github.com/o/r/pull/1#discussion_r4
+  #1 Changes requested: "Please split this function into two" (boundary)      https://github.com/o/r/pull/1#pullrequestreview-6
+
+FAILED CI ON MAIN
+  legacy @ 2222222  https://github.com/o/r/commit/2
+  boot @ 2222222    https://github.com/o/r/runs/boot
+  deploy @ 2222222  https://ci.example.com/1
+  slow @ 5555555    https://github.com/o/r/runs/slow
+
+MERGED
+  #1 PR 1 (alice)  https://github.com/o/r/pull/1

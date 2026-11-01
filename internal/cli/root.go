@@ -13,7 +13,7 @@ func Execute() error {
 }
 
 func newRootCmd(version string) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:           "gh-receipts",
 		Short:         "Know what your team actually shipped",
 		Version:       version,
@@ -25,4 +25,6 @@ func newRootCmd(version string) *cobra.Command {
 			return cmd.Help()
 		},
 	}
+	cmd.AddCommand(newTodayCmd(defaultTodayDeps()))
+	return cmd
 }

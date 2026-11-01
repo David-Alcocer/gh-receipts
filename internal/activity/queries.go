@@ -53,7 +53,7 @@ const (
 
 	activityFragments = `fragment reviewPage on PullRequestReviewConnection {
   pageInfo { hasPreviousPage startCursor }
-  nodes { state submittedAt url author { __typename login } }
+  nodes { state bodyText submittedAt url author { __typename login } }
 }
 fragment commentPage on IssueCommentConnection {
   pageInfo { hasPreviousPage startCursor }
@@ -85,7 +85,7 @@ fragment threadCommentPage on PullRequestReviewCommentConnection {
 }
 fragment reviewPage on PullRequestReviewConnection {
   pageInfo { hasPreviousPage startCursor }
-  nodes { state submittedAt url author { __typename login } }
+  nodes { state bodyText submittedAt url author { __typename login } }
 }
 `
 
@@ -163,6 +163,7 @@ fragment threadCommentPage on PullRequestReviewCommentConnection {
 	checksQuery = `query Checks($owner: String!, $name: String!, $since: GitTimestamp!, $cursor: String) {
   repository(owner: $owner, name: $name) {
     defaultBranchRef {
+      name
       target {
         ... on Commit {
           history(first: 100, since: $since, after: $cursor) {

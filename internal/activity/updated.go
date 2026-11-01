@@ -14,6 +14,7 @@ const excerptLength = 200
 
 type reviewNode struct {
 	State       string
+	BodyText    string
 	SubmittedAt *time.Time
 	URL         string
 	Author      *actor
@@ -54,7 +55,7 @@ type updatedNode struct {
 
 // fetchUpdated derives merged PRs, opened PRs, reviews and comments from one
 // search for everything updated since the given time.
-func fetchUpdated(ctx context.Context, client graphQLClient, repo repository.Repository, since time.Time) (Activity, error) {
+func fetchUpdated(ctx context.Context, client GraphQLClient, repo repository.Repository, since time.Time) (Activity, error) {
 	search := fmt.Sprintf("repo:%s/%s updated:>=%s sort:updated-desc", repo.Owner, repo.Name, since.UTC().Format(time.RFC3339))
 
 	nodes, warnings, err := searchAll(search, func(cursor interface{}) (searchConnection[updatedNode], error) {
@@ -76,7 +77,7 @@ func fetchUpdated(ctx context.Context, client graphQLClient, repo repository.Rep
 	return result, nil
 }
 
-func addNode(ctx context.Context, client graphQLClient, result *Activity, node updatedNode, since time.Time) error {
+func addNode(ctx context.Context, client GraphQLClient, result *Activity, node updatedNode, since time.Time) error {
 	comments, err := fetchComments(ctx, client, node, since)
 	if err != nil {
 		return err
@@ -112,7 +113,7 @@ func addNode(ctx context.Context, client graphQLClient, result *Activity, node u
 	return nil
 }
 
-func fetchReviews(ctx context.Context, client graphQLClient, node updatedNode, since time.Time) ([]Review, error) {
+func fetchReviews(ctx context.Context, client GraphQLClient, node updatedNode, since time.Time) ([]Review, error) {
 	// A review can sit pending for days before it's submitted, so its position
 	// in the list says nothing about submittedAt and every page has to be read.
 	nodes, err := walkBack(node.Reviews, func(reviewNode) bool { return true }, func(cursor string) (backwardPage[reviewNode], error) {
@@ -133,8 +134,10 @@ func fetchReviews(ctx context.Context, client graphQLClient, node updatedNode, s
 		}
 		reviews = append(reviews, Review{
 			PRNumber:    node.Number,
+			PRAuthor:    node.Author.login(),
 			Reviewer:    review.Author.login(),
 			State:       review.State,
+			Excerpt:     excerpt(review.BodyText),
 			SubmittedAt: *review.SubmittedAt,
 			URL:         review.URL,
 		})
@@ -142,7 +145,7 @@ func fetchReviews(ctx context.Context, client graphQLClient, node updatedNode, s
 	return reviews, nil
 }
 
-func fetchComments(ctx context.Context, client graphQLClient, node updatedNode, since time.Time) ([]Comment, error) {
+func fetchComments(ctx context.Context, client GraphQLClient, node updatedNode, since time.Time) ([]Comment, error) {
 	nodes, err := walkBack(node.Comments, func(oldest commentNode) bool { return !oldest.CreatedAt.Before(since) }, func(cursor string) (backwardPage[commentNode], error) {
 		var response struct {
 			Node struct{ Comments backwardPage[commentNode] }
@@ -163,7 +166,7 @@ func fetchComments(ctx context.Context, client graphQLClient, node updatedNode, 
 	return comments, nil
 }
 
-func fetchInlineComments(ctx context.Context, client graphQLClient, node updatedNode, since time.Time) ([]Comment, error) {
+func fetchInlineComments(ctx context.Context, client GraphQLClient, node updatedNode, since time.Time) ([]Comment, error) {
 	// Threads are ordered by when they started, and an old thread can have a new
 	// comment, so every page has to be read.
 	threads, err := walkBack(node.ReviewThreads, func(threadNode) bool { return true }, func(cursor string) (backwardPage[threadNode], error) {
@@ -197,7 +200,7 @@ func fetchInlineComments(ctx context.Context, client graphQLClient, node updated
 	return comments, nil
 }
 
-func fetchThreadComments(ctx context.Context, client graphQLClient, thread threadNode, since time.Time) ([]threadCommentNode, error) {
+func fetchThreadComments(ctx context.Context, client GraphQLClient, thread threadNode, since time.Time) ([]threadCommentNode, error) {
 	return walkBack(thread.Comments, func(oldest threadCommentNode) bool { return !oldest.CreatedAt.Before(since) }, func(cursor string) (backwardPage[threadCommentNode], error) {
 		var response struct {
 			Node struct {
@@ -219,12 +222,13 @@ func isRecentHumanComment(comment commentNode, since time.Time) bool {
 
 func newComment(comment commentNode, parent updatedNode) Comment {
 	return Comment{
-		Author:       comment.Author.login(),
-		Excerpt:      excerpt(comment.BodyText),
-		CreatedAt:    comment.CreatedAt,
-		URL:          comment.URL,
-		ParentNumber: parent.Number,
-		ParentAuthor: parent.Author.login(),
+		Author:        comment.Author.login(),
+		Excerpt:       excerpt(comment.BodyText),
+		CreatedAt:     comment.CreatedAt,
+		URL:           comment.URL,
+		ParentNumber:  parent.Number,
+		ParentAuthor:  parent.Author.login(),
+		OnPullRequest: parent.Typename == "PullRequest",
 	}
 }
 

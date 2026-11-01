@@ -80,7 +80,7 @@ func TestFetchActivityFromRecordedSearch(t *testing.T) {
 		requestKey(checksQuery, "", ""):         "checks_passing.json",
 	}}
 
-	got, err := fetch(context.Background(), client, testRepo, date(t, "2026-10-30T16:00:00Z"))
+	got, err := FetchWith(context.Background(), client, testRepo, date(t, "2026-10-30T16:00:00Z"))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -88,14 +88,14 @@ func TestFetchActivityFromRecordedSearch(t *testing.T) {
 	if want := []int{14348, 14349, 14350, 14351, 14355, 14879}; !slices.Equal(prNumbers(got.MergedPRs), want) {
 		t.Errorf("merged = %v, want %v", prNumbers(got.MergedPRs), want)
 	}
-	if want := []int{14879, 14885}; !slices.Equal(prNumbers(got.OpenedPRs), want) {
+	if want := []int{14879}; !slices.Equal(prNumbers(got.OpenedPRs), want) {
 		t.Errorf("opened = %v, want %v", prNumbers(got.OpenedPRs), want)
 	}
 	if len(got.Reviews) != 6 {
 		t.Errorf("reviews = %d, want 6", len(got.Reviews))
 	}
-	if len(got.Comments) != 20 {
-		t.Errorf("comments = %d, want 20", len(got.Comments))
+	if len(got.Comments) != 7 {
+		t.Errorf("comments = %d, want 7", len(got.Comments))
 	}
 	if len(got.FailedChecks) != 0 {
 		t.Errorf("failed checks = %v, want none", got.FailedChecks)
@@ -112,8 +112,8 @@ func TestFetchSkipsHistoryCommitsWithoutChecks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(got) != 0 {
-		t.Errorf("failed checks = %v, want none", got)
+	if len(got.Failed) != 0 {
+		t.Errorf("failed checks = %v, want none", got.Failed)
 	}
 }
 
@@ -131,8 +131,8 @@ func TestFetchFailedChecksIgnoresCancelledRuns(t *testing.T) {
 		CommitSHA:  "ddb055941b1901755ef33c208118815b3c586acb",
 		URL:        "https://github.com/nodejs/node/runs/124204094871",
 	}}
-	if !slices.Equal(got, want) {
-		t.Errorf("failed checks = %+v, want %+v", got, want)
+	if !slices.Equal(got.Failed, want) {
+		t.Errorf("failed checks = %+v, want %+v", got.Failed, want)
 	}
 }
 
@@ -202,6 +202,46 @@ func TestFetchUpdatedAcrossAllPaginationLevels(t *testing.T) {
 	slices.Sort(reviewers)
 	if want := []string{"bob", "boundary", "erin"}; !slices.Equal(reviewers, want) {
 		t.Errorf("reviewers = %v, want %v", reviewers, want)
+	}
+}
+
+func TestFetchUpdatedTellsIssuesFromPullRequests(t *testing.T) {
+	got, err := fetchUpdated(context.Background(), syntheticUpdatedClient(t), testRepo, date(t, "2026-10-01T00:00:00Z"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, comment := range got.Comments {
+		if want := comment.ParentNumber != 4; comment.OnPullRequest != want {
+			t.Errorf("comment on #%d: OnPullRequest = %t, want %t", comment.ParentNumber, comment.OnPullRequest, want)
+		}
+	}
+}
+
+func TestFetchUpdatedStoresReviewTextAndPRAuthor(t *testing.T) {
+	got, err := fetchUpdated(context.Background(), syntheticUpdatedClient(t), testRepo, date(t, "2026-10-01T00:00:00Z"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	index := slices.IndexFunc(got.Reviews, func(r Review) bool { return r.Reviewer == "bob" })
+	if index < 0 {
+		t.Fatal("bob's review is missing")
+	}
+	if review := got.Reviews[index]; review.PRAuthor != "alice" || review.Excerpt != "Looks good" {
+		t.Errorf("review = %+v, want PR author alice and text", review)
+	}
+}
+
+func TestFetchFailedChecksReportsDefaultBranch(t *testing.T) {
+	client := &fakeClient{t: t, fixtures: map[string]string{requestKey(checksQuery, "", ""): "checks_passing.json"}}
+
+	got, err := fetchFailedChecks(context.Background(), client, testRepo, date(t, "2026-10-27T00:00:00Z"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Branch != "trunk" {
+		t.Errorf("branch = %q, want trunk", got.Branch)
 	}
 }
 
@@ -321,8 +361,8 @@ func TestFetchFailedChecksAcrossPages(t *testing.T) {
 		{Name: "deploy", Conclusion: "FAILURE", CommitSHA: "22222222", URL: "https://ci.example.com/1"},
 		{Name: "slow", Conclusion: "TIMED_OUT", CommitSHA: "55555555", URL: "https://github.com/o/r/runs/slow"},
 	}
-	if !slices.Equal(got, want) {
-		t.Errorf("failed checks = %+v, want %+v", got, want)
+	if !slices.Equal(got.Failed, want) {
+		t.Errorf("failed checks = %+v, want %+v", got.Failed, want)
 	}
 }
 
@@ -333,8 +373,8 @@ func TestFetchFailedChecksOnRepoWithoutCommits(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(got) != 0 {
-		t.Errorf("failed checks = %v, want none", got)
+	if len(got.Failed) != 0 {
+		t.Errorf("failed checks = %v, want none", got.Failed)
 	}
 }
 
@@ -342,7 +382,7 @@ func TestFetchWrapsClientErrors(t *testing.T) {
 	cause := errors.New("boom")
 	client := &fakeClient{t: t, err: cause}
 
-	_, err := fetch(context.Background(), client, testRepo, date(t, "2026-10-01T00:00:00Z"))
+	_, err := FetchWith(context.Background(), client, testRepo, date(t, "2026-10-01T00:00:00Z"))
 	if !errors.Is(err, cause) {
 		t.Fatalf("error = %v, want it to wrap %v", err, cause)
 	}

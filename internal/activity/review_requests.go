@@ -22,7 +22,7 @@ type reviewRequests struct {
 
 // fetchReviewRequests returns the authenticated user and the open pull requests
 // requesting their review, directly or through a team.
-func fetchReviewRequests(ctx context.Context, client graphQLClient, repo repository.Repository) (reviewRequests, error) {
+func fetchReviewRequests(ctx context.Context, client GraphQLClient, repo repository.Repository) (reviewRequests, error) {
 	search := fmt.Sprintf("repo:%s/%s is:pr is:open review-requested:@me", repo.Owner, repo.Name)
 
 	var viewer string

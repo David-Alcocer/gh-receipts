@@ -14,16 +14,18 @@
       "author": {
        "__typename": "User",
        "login": "old"
-      }
+      },
+      "bodyText": "Please split this function\ninto two"
      },
      {
-      "state": "APPROVED",
+      "state": "CHANGES_REQUESTED",
       "submittedAt": "2026-10-01T00:00:00Z",
       "url": "https://github.com/o/r/pull/1#pullrequestreview-6",
       "author": {
        "__typename": "User",
        "login": "boundary"
-      }
+      },
+      "bodyText": "Please split this function\ninto two"
      }
     ]
    }
