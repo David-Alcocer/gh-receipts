@@ -1,0 +1,40 @@
+{
+ "data": {
+  "repository": {
+   "defaultBranchRef": {
+    "target": {
+     "history": {
+      "pageInfo": {
+       "hasNextPage": false,
+       "endCursor": null
+      },
+      "nodes": [
+       {
+        "id": "C5",
+        "oid": "55555555",
+        "url": "https://github.com/o/r/commit/5",
+        "statusCheckRollup": {
+         "state": "FAILURE",
+         "contexts": {
+          "pageInfo": {
+           "hasNextPage": false,
+           "endCursor": null
+          },
+          "nodes": [
+           {
+            "__typename": "CheckRun",
+            "name": "slow",
+            "conclusion": "TIMED_OUT",
+            "url": "https://github.com/o/r/runs/slow"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,56 @@
+{
+ "data": {
+  "node": {
+   "reviewThreads": {
+    "pageInfo": {
+     "hasPreviousPage": false,
+     "startCursor": null
+    },
+    "nodes": [
+     {
+      "id": "TH2",
+      "comments": {
+       "pageInfo": {
+        "hasPreviousPage": false,
+        "startCursor": null
+       },
+       "nodes": [
+        {
+         "url": "https://github.com/o/r/pull/1#discussion_r2",
+         "bodyText": "inline",
+         "createdAt": "2026-09-01T00:00:00Z",
+         "author": {
+          "__typename": "User",
+          "login": "old"
+         },
+         "pullRequestReview": null
+        }
+       ]
+      }
+     },
+     {
+      "id": "TH3",
+      "comments": {
+       "pageInfo": {
+        "hasPreviousPage": false,
+        "startCursor": null
+       },
+       "nodes": [
+        {
+         "url": "https://github.com/o/r/pull/1#discussion_r3",
+         "bodyText": "inline",
+         "createdAt": "2026-10-06T00:00:00Z",
+         "author": {
+          "__typename": "User",
+          "login": "ivan"
+         },
+         "pullRequestReview": null
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ }
+}

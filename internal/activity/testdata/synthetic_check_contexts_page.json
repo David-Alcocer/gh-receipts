@@ -1,0 +1,34 @@
+{
+ "data": {
+  "node": {
+   "statusCheckRollup": {
+    "contexts": {
+     "pageInfo": {
+      "hasNextPage": false,
+      "endCursor": null
+     },
+     "nodes": [
+      {
+       "__typename": "CheckRun",
+       "name": "boot",
+       "conclusion": "STARTUP_FAILURE",
+       "url": "https://github.com/o/r/runs/boot"
+      },
+      {
+       "__typename": "CheckRun",
+       "name": "stopped",
+       "conclusion": "CANCELLED",
+       "url": "https://github.com/o/r/runs/stopped"
+      },
+      {
+       "__typename": "StatusContext",
+       "context": "deploy",
+       "state": "FAILURE",
+       "targetUrl": "https://ci.example.com/1"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

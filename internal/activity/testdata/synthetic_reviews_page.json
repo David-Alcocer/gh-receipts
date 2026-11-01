@@ -1,0 +1,32 @@
+{
+ "data": {
+  "node": {
+   "reviews": {
+    "pageInfo": {
+     "hasPreviousPage": false,
+     "startCursor": null
+    },
+    "nodes": [
+     {
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-09-20T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#pullrequestreview-5",
+      "author": {
+       "__typename": "User",
+       "login": "old"
+      }
+     },
+     {
+      "state": "APPROVED",
+      "submittedAt": "2026-10-01T00:00:00Z",
+      "url": "https://github.com/o/r/pull/1#pullrequestreview-6",
+      "author": {
+       "__typename": "User",
+       "login": "boundary"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

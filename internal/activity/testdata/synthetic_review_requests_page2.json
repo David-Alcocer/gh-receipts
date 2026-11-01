@@ -1,0 +1,22 @@
+{
+ "data": {
+  "viewer": {
+   "login": "octocat"
+  },
+  "search": {
+   "issueCount": 3,
+   "pageInfo": {
+    "hasNextPage": false,
+    "endCursor": null
+   },
+   "nodes": [
+    {
+     "number": 9,
+     "title": "PR 9",
+     "url": "https://github.com/o/r/pull/9",
+     "author": null
+    }
+   ]
+  }
+ }
+}

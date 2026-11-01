@@ -97,7 +97,7 @@ This repo is built the way it recommends working:
 
 ## Contributing
 
-Issues labeled `feature` have explicit acceptance criteria — pick one, comment that you're taking it, and open a PR that closes it. Issues labeled `hand-written` are reserved for the maintainer to write without AI generation.
+Issues labeled `feature` have explicit acceptance criteria — pick one, comment that you're taking it, and open a PR that closes it.
 
 ## License
 

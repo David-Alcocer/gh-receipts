@@ -1,0 +1,34 @@
+{
+ "data": {
+  "viewer": {
+   "login": "octocat"
+  },
+  "search": {
+   "issueCount": 3,
+   "pageInfo": {
+    "hasNextPage": true,
+    "endCursor": "RR1"
+   },
+   "nodes": [
+    {
+     "number": 7,
+     "title": "PR 7",
+     "url": "https://github.com/o/r/pull/7",
+     "author": {
+      "__typename": "User",
+      "login": "alice"
+     }
+    },
+    {
+     "number": 8,
+     "title": "PR 8",
+     "url": "https://github.com/o/r/pull/8",
+     "author": {
+      "__typename": "Bot",
+      "login": "renovate"
+     }
+    }
+   ]
+  }
+ }
+}

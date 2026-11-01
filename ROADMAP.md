@@ -7,7 +7,7 @@ Each version should be usable on its own. Ship small, use it on this repo, then 
 Goal: replace "hey agent, what's next?" with a verifiable report.
 
 - Scaffold the extension, CI and releases (#1)
-- Activity data layer: PRs, reviews, comments, CI runs since a timestamp (#2, **hand-written**)
+- Activity data layer: PRs, reviews, comments, CI runs since a timestamp (#2)
 - `today` command with session memory and `--json` output (#3)
 - Project board section in `today` (#4)
 
@@ -37,7 +37,7 @@ Goal: replace "hey agent, what's next?" with a verifiable report.
 
 ## Build rules
 
-1. The maintainer writes the README, acceptance criteria and every `hand-written` issue.
+1. The maintainer writes the README and acceptance criteria.
 2. For AI-assisted issues: the agent proposes a plan, the maintainer reviews it before implementation.
 3. If the author can't explain a PR line by line, it doesn't get merged.
 4. Small PRs, `main` always green, every PR closes an issue.

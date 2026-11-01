@@ -1,6 +1,6 @@
 ### Context
 
-This is the core of the tool: fetching *facts* from GitHub. Every other command builds on it, and it's where you learn how PRs, reviews, comments and checks really work in the API. **Written by hand by the maintainer.** The agent may explain, review and suggest tests, but not generate the implementation.
+This is the core of the tool: fetching *facts* from GitHub. Every other command builds on it.
 
 ### Acceptance criteria
 
