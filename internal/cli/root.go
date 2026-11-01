@@ -25,6 +25,6 @@ func newRootCmd(version string) *cobra.Command {
 			return cmd.Help()
 		},
 	}
-	cmd.AddCommand(newTodayCmd(defaultTodayDeps()))
+	cmd.AddCommand(newTodayCmd(defaultTodayDeps()), newCriteriaCmd(defaultCriteriaDeps()))
 	return cmd
 }

@@ -79,7 +79,7 @@ func runToday(cmd *cobra.Command, deps todayDeps, flags todayFlags) error {
 	// this one is fetching.
 	start := deps.now()
 
-	repo, err := resolveRepo(deps, flags.repo)
+	repo, err := resolveRepo(deps.currentRepo, flags.repo)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func fetchBoard(ctx context.Context, deps todayDeps, number int, repo repository
 	return &board, true, nil
 }
 
-func resolveRepo(deps todayDeps, flag string) (repository.Repository, error) {
+func resolveRepo(currentRepo func() (repository.Repository, error), flag string) (repository.Repository, error) {
 	if flag != "" {
 		repo, err := repository.Parse(flag)
 		if err != nil {
@@ -156,7 +156,7 @@ func resolveRepo(deps todayDeps, flag string) (repository.Repository, error) {
 		return repo, nil
 	}
 
-	repo, err := deps.currentRepo()
+	repo, err := currentRepo()
 	if err != nil {
 		return repository.Repository{}, errors.New("no GitHub repository found here: run this inside a clone or pass --repo owner/name")
 	}

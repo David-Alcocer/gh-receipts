@@ -27,7 +27,7 @@ With agents writing more code than ever, small teams lose track of what actually
 | Command | What it does | Status |
 |---|---|---|
 | `gh receipts today` | What changed since your last session: reviews waiting for you, new comments and reviews on your PRs, failed CI, merged PRs, Project board updates | in progress (v0.1) |
-| `gh receipts criteria <issue>` | Parses an issue's acceptance criteria checklist | planned (v0.2) |
+| `gh receipts criteria <issue>` | Parses an issue's acceptance criteria checklist, with `--json` ([schema](docs/criteria-json.md)) | in progress (v0.2) |
 | `gh receipts health` | Team flow signals: PR size, time to first review, time to merge, stale PRs, issues opened vs closed | planned (v0.2) |
 | `gh receipts verify <pr>` | Checks each acceptance criterion of the linked issue against evidence: *met / partial / no evidence* | planned (v0.3) |
 
