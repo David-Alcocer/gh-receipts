@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
+	"github.com/David-Alcocer/gh-receipts/internal/project"
 	"github.com/David-Alcocer/gh-receipts/internal/report"
 	"github.com/David-Alcocer/gh-receipts/internal/session"
 )
@@ -30,20 +31,26 @@ type todayDeps struct {
 	now         func() time.Time
 	currentRepo func() (repository.Repository, error)
 	fetch       func(ctx context.Context, repo repository.Repository, since time.Time) (activity.Activity, error)
+	// configuredProject returns the repository's project number, or 0.
+	configuredProject func(ctx context.Context, repo repository.Repository) (int, error)
+	fetchProject      func(ctx context.Context, owner string, number int, since time.Time, viewer string) (project.Project, error)
 }
 
 type todayFlags struct {
-	since  string
-	repo   string
-	asJSON bool
+	since   string
+	repo    string
+	project int
+	asJSON  bool
 }
 
 func defaultTodayDeps() todayDeps {
 	return todayDeps{
-		store:       session.Store{},
-		now:         time.Now,
-		currentRepo: repository.Current,
-		fetch:       activity.Fetch,
+		store:             session.Store{},
+		now:               time.Now,
+		currentRepo:       repository.Current,
+		fetch:             activity.Fetch,
+		configuredProject: project.ConfiguredNumber,
+		fetchProject:      project.Fetch,
 	}
 }
 
@@ -54,11 +61,15 @@ func newTodayCmd(deps todayDeps) *cobra.Command {
 		Short: "Show what changed since your last session",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("project") && flags.project <= 0 {
+				return fmt.Errorf("invalid --project %d: it must be a positive number", flags.project)
+			}
 			return runToday(cmd, deps, flags)
 		},
 	}
 	cmd.Flags().StringVar(&flags.since, "since", "", `start from a duration ago ("48h") or a date ("2026-11-01"), keeping the last session`)
 	cmd.Flags().StringVar(&flags.repo, "repo", "", "repository to report on, as owner/name")
+	cmd.Flags().IntVar(&flags.project, "project", 0, "GitHub Project number, instead of the one in .github/receipts.yml")
 	cmd.Flags().BoolVar(&flags.asJSON, "json", false, "print the complete data as JSON, keeping the last session")
 	return cmd
 }
@@ -81,11 +92,18 @@ func runToday(cmd *cobra.Command, deps todayDeps, flags todayFlags) error {
 	if err != nil {
 		return err
 	}
+	board, boardRead, err := fetchBoard(cmd.Context(), deps, flags.project, repo, since, result.Viewer)
+	if err != nil {
+		return err
+	}
+	if !boardRead {
+		result.Warnings = append(result.Warnings, project.ErrMissingScope.Error())
+	}
 	for _, warning := range result.Warnings {
 		warn(cmd, warning)
 	}
 
-	info := report.Info{Repo: repo, Since: since, SinceSource: source}
+	info := report.Info{Repo: repo, Since: since, SinceSource: source, Project: board}
 	if flags.asJSON {
 		return report.JSON(cmd.OutOrStdout(), result, info)
 	}
@@ -94,14 +112,39 @@ func runToday(cmd *cobra.Command, deps todayDeps, flags todayFlags) error {
 	}
 
 	// Only a report someone read moves the session forward. Otherwise an agent
-	// reading --json, or a look back with --since, would hide news from the next
-	// report.
-	if flags.since == "" {
+	// reading --json, a look back with --since, or a board that couldn't be read
+	// would hide news from the next report.
+	if flags.since == "" && boardRead {
 		if err := deps.store.Save(repo, start); err != nil {
 			warn(cmd, err.Error())
 		}
 	}
 	return nil
+}
+
+// fetchBoard returns the selected project, or nil when there is none. A missing
+// scope isn't an error: the configuration is shared, and a teammate without the
+// scope should still get the rest of the report. It returns false in that case.
+func fetchBoard(ctx context.Context, deps todayDeps, number int, repo repository.Repository, since time.Time, viewer string) (*project.Project, bool, error) {
+	if number == 0 {
+		configured, err := deps.configuredProject(ctx, repo)
+		if err != nil {
+			return nil, false, err
+		}
+		number = configured
+	}
+	if number == 0 {
+		return nil, true, nil
+	}
+
+	board, err := deps.fetchProject(ctx, repo.Owner, number, since, viewer)
+	if errors.Is(err, project.ErrMissingScope) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return &board, true, nil
 }
 
 func resolveRepo(deps todayDeps, flag string) (repository.Repository, error) {

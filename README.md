@@ -51,7 +51,7 @@ MERGED
   #42 Add login form validation (ana)                   https://github.com/acme/app/pull/42
 
 PROJECT
-  #39 Signup flow  Review                         github.com/orgs/acme/projects/3
+  #39 Signup flow  Review                               https://github.com/acme/app/issues/39
 ```
 
 ### Feeding your agent facts instead of memories
@@ -69,7 +69,17 @@ Then ask your coding agent to plan the day from that file. The agent works from 
 gh extension install David-Alcocer/gh-receipts
 ```
 
-Requires the GitHub CLI (`gh`) authenticated. Project board features need the `read:project` scope:
+Requires the GitHub CLI (`gh`) authenticated.
+
+### Show a GitHub Project in `today`
+
+Pass `--project <number>`, or set it for everyone in `.github/receipts.yml` on the default branch:
+
+```yaml
+project: 3
+```
+
+The project has to belong to the repository's owner. Project board features need the `read:project` scope:
 
 ```
 gh auth refresh -s read:project

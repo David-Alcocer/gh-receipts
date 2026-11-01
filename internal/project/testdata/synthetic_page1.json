@@ -1,0 +1,79 @@
+{
+ "data": {
+  "repositoryOwner": {
+   "__typename": "User",
+   "projectV2": {
+    "title": "Team board",
+    "url": "https://github.com/users/octocat/projects/3",
+    "items": {
+     "pageInfo": {
+      "hasNextPage": true,
+      "endCursor": "P1"
+     },
+     "nodes": [
+      {
+       "updatedAt": "2026-10-05T00:00:00Z",
+       "fieldValueByName": {
+        "name": "Todo"
+       },
+       "content": {
+        "__typename": "Issue",
+        "number": 1,
+        "title": "Issue 1",
+        "url": "https://github.com/o/r/issues/1",
+        "assignees": {
+         "nodes": [
+          {
+           "login": "bob"
+          }
+         ]
+        }
+       }
+      },
+      {
+       "updatedAt": "2026-09-30T23:59:59Z",
+       "fieldValueByName": {
+        "name": "Done"
+       },
+       "content": {
+        "__typename": "Issue",
+        "number": 2,
+        "title": "Issue 2",
+        "url": "https://github.com/o/r/issues/2",
+        "assignees": {
+         "nodes": [
+          {
+           "login": "octocat"
+          }
+         ]
+        }
+       }
+      },
+      {
+       "updatedAt": "2026-10-03T00:00:00Z",
+       "fieldValueByName": {
+        "name": "In progress"
+       },
+       "content": {
+        "__typename": "PullRequest",
+        "number": 3,
+        "title": "PR 3",
+        "url": "https://github.com/o/r/pull/3",
+        "assignees": {
+         "nodes": [
+          {
+           "login": "octocat"
+          },
+          {
+           "login": "bob"
+          }
+         ]
+        }
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

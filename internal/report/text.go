@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
+	"github.com/David-Alcocer/gh-receipts/internal/project"
 )
 
 const (
@@ -81,6 +82,9 @@ func visibleSections(a activity.Activity, info Info) []section {
 			lines:   pullRequestLines(a.MergedPRs),
 			moreURL: base + "/pulls?q=" + url.QueryEscape("is:pr is:merged merged:>="+info.Since.UTC().Format(time.DateOnly)),
 		},
+	}
+	if info.Project != nil {
+		all = append(all, section{title: "PROJECT", lines: projectLines(info.Project.Items), moreURL: info.Project.URL})
 	}
 	return slices.DeleteFunc(all, func(s section) bool { return len(s.lines) == 0 })
 }
@@ -185,6 +189,18 @@ func clean(text string) string {
 		}
 		return r
 	}, text)
+}
+
+func projectLines(items []project.Item) []line {
+	lines := make([]line, 0, len(items))
+	for _, item := range items {
+		text := fmt.Sprintf("%s  %s", clean(item.Title), clean(item.Status))
+		if item.Number != 0 {
+			text = fmt.Sprintf("#%d %s", item.Number, text)
+		}
+		lines = append(lines, line{text: text, url: item.URL})
+	}
+	return lines
 }
 
 func shorten(text string) string {
