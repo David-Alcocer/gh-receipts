@@ -14,7 +14,6 @@ set -euo pipefail
 PROJECT="${PROJECT:-}"
 
 gh label create feature      --color 1D76DB --description "Unit of work with acceptance criteria" --force
-gh label create hand-written --color D93F0B --description "Maintainer writes this by hand; AI only reviews" --force
 gh label create mvp          --color 0E8A16 --description "Part of v0.1 or v0.2" --force
 
 create() {
@@ -27,7 +26,7 @@ create() {
 }
 
 create issues/01-scaffold.md                 "Scaffold gh extension with CI and releases"        "feature,mvp"
-create issues/02-activity-data-layer.md      "Activity data layer: PRs, reviews, comments, CI"   "feature,mvp,hand-written"
+create issues/02-activity-data-layer.md      "Activity data layer: PRs, reviews, comments, CI"   "feature,mvp"
 create issues/03-today-command.md            "today command with session memory and --json"     "feature,mvp"
 create issues/04-project-section.md          "Project board section in today"                   "feature,mvp"
 create issues/05-acceptance-criteria-parser.md "Acceptance criteria convention and parser"      "feature,mvp"

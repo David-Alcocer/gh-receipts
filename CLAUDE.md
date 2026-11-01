@@ -34,10 +34,6 @@ Summarize only what those commands returned, with issue/PR numbers.
    - A table mapping **each acceptance criterion** to its evidence (file and line, test name, or CI link), marked `met`, `partial` or `not done`. Never mark something `met` without evidence.
    - "Things to understand before merging": the 3–5 key decisions or tricky parts the maintainer must be able to explain.
 
-## Issues labeled `hand-written`
-
-The maintainer writes the implementation. You may explain concepts, answer questions, suggest test cases, review code the maintainer wrote and point to docs. **Do not write the implementation code**, even if asked casually; remind the maintainer of this rule instead.
-
 ## Technical rules
 
 - Go, with `github.com/cli/go-gh/v2` for auth and API clients. No manual token handling.
