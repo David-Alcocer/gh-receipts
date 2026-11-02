@@ -54,24 +54,33 @@ func CriteriaText(w io.Writer, issue criteria.Issue) error {
 	columns := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	fmt.Fprintf(columns, "#%d %s  %s\t%s\n", issue.Number, clean(issue.Title), criteriaSummary(issue.Result), issue.URL)
 	for _, item := range issue.Items {
-		fmt.Fprintf(columns, "  %s[%s] %s\t%s\n", strings.Repeat("  ", item.Depth), checkMark(item), shorten(clean(item.Text)), issue.URL)
+		fmt.Fprintf(columns, "  %s%s %s\t%s\n", strings.Repeat("  ", item.Depth), itemMarker(item), shorten(clean(item.Text)), issue.URL)
 	}
 	return columns.Flush()
 }
 
+// criteriaSummary counts checked boxes. Plain list items can't be checked, so
+// a section of them is only counted, never shown as 0 done.
 func criteriaSummary(result criteria.Result) string {
 	switch {
 	case !result.Found:
 		return "no criteria found"
 	case len(result.Items) == 0:
 		return "section is empty"
+	case !result.Items[0].Checkbox && len(result.Items) == 1:
+		return "1 criterion, no checkboxes"
+	case !result.Items[0].Checkbox:
+		return fmt.Sprintf("%d criteria, no checkboxes", len(result.Items))
 	}
 	return fmt.Sprintf("%d/%d", result.Checked(), len(result.Items))
 }
 
-func checkMark(item criteria.Item) string {
-	if item.Checked {
-		return "x"
+func itemMarker(item criteria.Item) string {
+	switch {
+	case !item.Checkbox:
+		return "-"
+	case item.Checked:
+		return "[x]"
 	}
-	return " "
+	return "[ ]"
 }
