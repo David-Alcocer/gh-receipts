@@ -6,24 +6,30 @@ import (
 	"strings"
 )
 
-const (
-	sectionName = "acceptance criteria"
-	// tabWidth is how many columns a tab indents a list item.
-	tabWidth = 4
-)
+// tabWidth is how many columns a tab indents a list item.
+const tabWidth = 4
+
+// sectionNames are the headings that start the criteria section, compared
+// without case.
+var sectionNames = []string{"acceptance criteria", "criterios de aceptación", "criterios de aceptacion"}
 
 var (
 	headingPattern  = regexp.MustCompile(`^ {0,3}(#{1,6})(?:[ \t]+(.*?))??(?:[ \t]+#+)?[ \t]*$`)
 	checkboxPattern = regexp.MustCompile(`^([ \t]*)(?:[-*+]|\d{1,9}[.)])[ \t]+\[([ xX])\](?:[ \t]+(.*))?$`)
-	fencePattern    = regexp.MustCompile("^[ \t]*(`{3,}|~{3,})")
+	listItemPattern = regexp.MustCompile(`^([ \t]*)(?:[-*+]|\d{1,9}[.)])[ \t]+(.*)$`)
+	// A malformed box like "[y]" or "[ ]text" is neither a checkbox nor plain text.
+	malformedBoxPattern = regexp.MustCompile(`^\[.\]`)
+	breakPattern        = regexp.MustCompile(`^ {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$`)
+	fencePattern        = regexp.MustCompile("^[ \t]*(`{3,}|~{3,})")
 )
 
-// Item is one checklist item. Depth is 0 for top-level items, and each nested
-// checklist adds one.
+// Item is one criterion. Depth is 0 for top-level items, and each nested list
+// adds one. Checkbox is false for a plain list item, which can't be checked.
 type Item struct {
-	Text    string `json:"text"`
-	Checked bool   `json:"checked"`
-	Depth   int    `json:"depth"`
+	Text     string `json:"text"`
+	Checked  bool   `json:"checked"`
+	Depth    int    `json:"depth"`
+	Checkbox bool   `json:"checkbox"`
 }
 
 // Result is what an issue body says about its criteria. Found is false when
@@ -44,14 +50,17 @@ func (r Result) Checked() int {
 	return checked
 }
 
-// Parse reads the first "Acceptance criteria" section of an issue body, with a
-// ## or ### heading. Bodies are written by people, so anything else is ignored.
+// Parse reads the first "Acceptance criteria" or "Criterios de aceptación"
+// section of an issue body, with a ## or ### heading. The criteria are its
+// checkboxes or, in a section without any, its plain list items. Bodies are
+// written by people, so anything else is ignored.
 func Parse(body string) Result {
-	result := Result{Items: []Item{}}
+	found := false
 	sectionLevel := 0
 	fence := ""
-	var indents []int
+	var boxes, plain list
 
+lines:
 	for _, text := range strings.Split(strings.ReplaceAll(body, "\r\n", "\n"), "\n") {
 		if fence != "" {
 			if closesFence(text, fence) {
@@ -66,36 +75,70 @@ func Parse(body string) Result {
 
 		if heading := headingPattern.FindStringSubmatch(text); heading != nil {
 			level := len(heading[1])
-			if result.Found && level <= sectionLevel {
-				return result
+			if found && level <= sectionLevel {
+				break lines
 			}
-			if !result.Found && isSectionHeading(level, heading[2]) {
-				result.Found = true
+			if !found && isSectionHeading(level, heading[2]) {
+				found = true
 				sectionLevel = level
 			}
 			continue
 		}
 
-		if !result.Found {
+		if !found {
 			continue
 		}
 		if box := checkboxPattern.FindStringSubmatch(text); box != nil {
 			// The form template starts with an empty "- [ ]", which isn't a criterion.
-			label := strings.TrimSpace(box[3])
-			if label == "" {
-				continue
+			if label := strings.TrimSpace(box[3]); label != "" {
+				boxes.add(box[1], Item{Text: label, Checked: box[2] != " ", Checkbox: true})
 			}
-			indent := indentWidth(box[1])
-			indents = dropIndentsFrom(indents, indent)
-			result.Items = append(result.Items, Item{Text: label, Checked: box[2] != " ", Depth: len(indents)})
-			indents = append(indents, indent)
+			continue
+		}
+		if item := listItemPattern.FindStringSubmatch(text); item != nil && !breakPattern.MatchString(text) {
+			label := strings.TrimSpace(item[2])
+			if label != "" && !malformedBoxPattern.MatchString(label) {
+				plain.add(item[1], Item{Text: label})
+			}
 		}
 	}
-	return result
+
+	// A checklist with notes under its items keeps only the checkboxes.
+	items := boxes.items
+	if len(items) == 0 {
+		items = plain.items
+	}
+	if items == nil {
+		items = []Item{}
+	}
+	return Result{Found: found, Items: items}
+}
+
+// list collects items of one kind with their nesting depth.
+type list struct {
+	items   []Item
+	indents []int
+}
+
+func (l *list) add(indent string, item Item) {
+	width := indentWidth(indent)
+	l.indents = dropIndentsFrom(l.indents, width)
+	item.Depth = len(l.indents)
+	l.items = append(l.items, item)
+	l.indents = append(l.indents, width)
 }
 
 func isSectionHeading(level int, name string) bool {
-	return (level == 2 || level == 3) && strings.EqualFold(strings.TrimSpace(name), sectionName)
+	if level != 2 && level != 3 {
+		return false
+	}
+	name = strings.TrimSpace(name)
+	for _, sectionName := range sectionNames {
+		if strings.EqualFold(name, sectionName) {
+			return true
+		}
+	}
+	return false
 }
 
 // closesFence follows Markdown: a code block ends with the same character,

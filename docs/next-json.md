@@ -47,7 +47,7 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `url` | string | Link to the issue |
 | `criteria` | Criteria | Its acceptance criteria |
 
-`criteria` has `found` and `items`, as described in [`criteria --json`](criteria-json.md). Unchecked criteria are the items with `checked: false`.
+`criteria` has `found` and `items`, as described in [`criteria --json`](criteria-json.md). Unchecked criteria are the items with `checkbox: true` and `checked: false`. Items with `checkbox: false` are plain list items, which can't be checked.
 
 ## Order
 

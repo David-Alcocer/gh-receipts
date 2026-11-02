@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -118,5 +119,19 @@ func TestFetchHandlesAnEmptyResponse(t *testing.T) {
 
 	if err == nil || !strings.Contains(err.Error(), "not found") {
 		t.Errorf("error = %v", err)
+	}
+}
+
+func TestFetchSpanishIssueWithPlainList(t *testing.T) {
+	client := &fakeClient{t: t, fixture: "synthetic_spanish_list.json"}
+
+	got, err := FetchWith(context.Background(), client, testRepo, 7)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := []Item{{Text: "Los cambios persisten al recargar."}, {Text: "Cada acción visible tiene comportamiento funcional."}}
+	if !got.Found || !reflect.DeepEqual(got.Items, want) {
+		t.Errorf("found = %v, items = %+v, want %+v", got.Found, got.Items, want)
 	}
 }

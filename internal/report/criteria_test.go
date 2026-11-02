@@ -26,9 +26,9 @@ func renderCriteria(t *testing.T, issue criteria.Issue) string {
 
 func TestCriteriaTextShowsEachItemWithItsSource(t *testing.T) {
 	got := renderCriteria(t, testIssue(criteria.Result{Found: true, Items: []criteria.Item{
-		{Text: "First", Checked: true},
-		{Text: "Nested", Depth: 1},
-		{Text: "Second"},
+		{Text: "First", Checkbox: true, Checked: true},
+		{Text: "Nested", Checkbox: true, Depth: 1},
+		{Text: "Second", Checkbox: true},
 	}}))
 
 	want := "" +
@@ -36,6 +36,21 @@ func TestCriteriaTextShowsEachItemWithItsSource(t *testing.T) {
 		"  [x] First     " + testIssueURL + "\n" +
 		"    [ ] Nested  " + testIssueURL + "\n" +
 		"  [ ] Second    " + testIssueURL + "\n"
+	if got != want {
+		t.Errorf("text =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestCriteriaTextDoesNotShowPlainItemsAsUnchecked(t *testing.T) {
+	got := renderCriteria(t, testIssue(criteria.Result{Found: true, Items: []criteria.Item{
+		{Text: "First"},
+		{Text: "Nested", Depth: 1},
+	}}))
+
+	want := "" +
+		"#5 Parser  2 criteria, no checkboxes  " + testIssueURL + "\n" +
+		"  - First                             " + testIssueURL + "\n" +
+		"    - Nested                          " + testIssueURL + "\n"
 	if got != want {
 		t.Errorf("text =\n%s\nwant\n%s", got, want)
 	}
@@ -49,6 +64,7 @@ func TestCriteriaTextExplainsMissingAndEmptySections(t *testing.T) {
 	}{
 		{"missing", criteria.Result{Items: []criteria.Item{}}, "#5 Parser  no criteria found  " + testIssueURL + "\n"},
 		{"empty", criteria.Result{Found: true, Items: []criteria.Item{}}, "#5 Parser  section is empty  " + testIssueURL + "\n"},
+		{"one plain item", criteria.Result{Found: true, Items: []criteria.Item{{Text: "Only"}}}, "#5 Parser  1 criterion, no checkboxes  " + testIssueURL + "\n  - Only                               " + testIssueURL + "\n"},
 	}
 
 	for _, tt := range tests {
@@ -61,7 +77,7 @@ func TestCriteriaTextExplainsMissingAndEmptySections(t *testing.T) {
 }
 
 func TestCriteriaTextRemovesControlCharacters(t *testing.T) {
-	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: "Safe\x1b[2J"}}})
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: "Safe\x1b[2J", Checkbox: true}}})
 	issue.Title = "Title\x1b]0;x\a"
 
 	got := renderCriteria(t, issue)
@@ -90,7 +106,7 @@ func TestCriteriaTextShortensLongItemsButJSONDoesNot(t *testing.T) {
 
 func TestCriteriaJSON(t *testing.T) {
 	var out bytes.Buffer
-	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: "Use <b>", Checked: true, Depth: 1}}})
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: "Use <b>", Checkbox: true, Checked: true, Depth: 1}}})
 
 	if err := CriteriaJSON(&out, testRepo, issue); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -108,7 +124,8 @@ func TestCriteriaJSON(t *testing.T) {
     {
       "text": "Use <b>",
       "checked": true,
-      "depth": 1
+      "depth": 1,
+      "checkbox": true
     }
   ]
 }
