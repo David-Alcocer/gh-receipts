@@ -62,7 +62,7 @@ mkdir -p .receipts
 gh receipts today --json > .receipts/today.json
 ```
 
-Then ask your coding agent to plan the day from that file. The agent works from verifiable data, and you can check every claim. The JSON output is complete and doesn't change your last session; see the [schema](docs/today-json.md).
+Then ask your coding agent to plan the day from that file. The agent works from verifiable data, and you can check every claim. The JSON output is complete and doesn't change your last session; when the agent shows you the report, `--json --mark` moves it forward. See the [schema](docs/today-json.md).
 
 ## Install
 

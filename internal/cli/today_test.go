@@ -44,6 +44,10 @@ type todayRun struct {
 	fetchErr error
 	repoErr  error
 	fetched  activity.Activity
+	// clockStep moves the clock forward on every read, so the start of a run
+	// differs from its end.
+	clockStep time.Duration
+	clockRead int
 
 	configured    int
 	configuredErr error
@@ -64,7 +68,11 @@ func (r *todayRun) execute(t *testing.T, args ...string) error {
 	}
 	cmd := newTodayCmd(todayDeps{
 		store: r.store,
-		now:   func() time.Time { return testNow },
+		now: func() time.Time {
+			at := testNow.Add(time.Duration(r.clockRead) * r.clockStep)
+			r.clockRead++
+			return at
+		},
 		currentRepo: func() (repository.Repository, error) {
 			return testRepo, r.repoErr
 		},
@@ -168,6 +176,96 @@ func TestTodayJSONDoesNotUpdateLastRun(t *testing.T) {
 	}
 	if document.SchemaVersion != 1 {
 		t.Errorf("schemaVersion = %d, want 1", document.SchemaVersion)
+	}
+}
+
+func TestTodayJSONMarkSavesTheStartOfTheRun(t *testing.T) {
+	run := &todayRun{store: &fakeStore{last: testNow.Add(-time.Hour), found: true}, clockStep: time.Minute}
+
+	if err := run.execute(t, "--json", "--mark"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(run.store.saved) != 1 || !run.store.saved[0].Equal(testNow) {
+		t.Errorf("saved = %v, want the start of the run %v", run.store.saved, testNow)
+	}
+}
+
+func TestTodayJSONMarkPrintsTheSameJSON(t *testing.T) {
+	fetched := activity.Activity{MergedPRs: []activity.PullRequest{{Number: 1, Title: "One", Author: "bob", URL: "https://x/1"}}}
+	plain := &todayRun{fetched: fetched}
+	marked := &todayRun{fetched: fetched}
+
+	if err := plain.execute(t, "--json"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := marked.execute(t, "--json", "--mark"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if plain.stdout.String() != marked.stdout.String() {
+		t.Errorf("--mark changed the JSON:\n%s\nwant\n%s", marked.stdout.String(), plain.stdout.String())
+	}
+}
+
+func TestTodayJSONMarkSavesNothingWhenTheRunIsIncomplete(t *testing.T) {
+	tests := []struct {
+		name string
+		run  *todayRun
+	}{
+		{"fetch fails", &todayRun{fetchErr: errors.New("HTTP 502")}},
+		{"project can't be read", &todayRun{configured: 3, boardErr: project.ErrMissingScope}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = tt.run.execute(t, "--json", "--mark")
+
+			if len(tt.run.store.saved) != 0 {
+				t.Errorf("saved = %v, want nothing", tt.run.store.saved)
+			}
+		})
+	}
+}
+
+func TestTodayMarkNeedsJSONWithoutSince(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"with --since", []string{"--json", "--mark", "--since", "48h"}, "--since"},
+		{"without --json", []string{"--mark"}, "--json"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			run := &todayRun{}
+
+			err := run.execute(t, tt.args...)
+
+			if err == nil || !strings.Contains(err.Error(), "--mark") || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("error = %v, want one that mentions --mark and %s", err, tt.want)
+			}
+			if run.clockRead != 0 || len(run.store.saved) != 0 {
+				t.Errorf("the run started: clock read %d times, saved %v", run.clockRead, run.store.saved)
+			}
+		})
+	}
+}
+
+func TestTodayJSONMarkWarnsWhenItCannotSave(t *testing.T) {
+	run := &todayRun{store: &fakeStore{saveErr: errors.New("disk full")}}
+
+	if err := run.execute(t, "--json", "--mark"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(run.stderr.String(), "disk full") {
+		t.Errorf("stderr = %q, want a warning", run.stderr.String())
+	}
+	if !json.Valid(run.stdout.Bytes()) {
+		t.Errorf("stdout is not JSON: %q", run.stdout.String())
 	}
 }
 

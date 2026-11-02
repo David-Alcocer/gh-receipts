@@ -20,5 +20,5 @@
 
 ## Consequences
 
-- Reading `today --json` repeatedly returns the same window until the text report runs.
+- Reading `today --json` repeatedly returns the same window until the text report runs, or `--json --mark` (see 0008).
 - Text from GitHub is untrusted: the text report removes control characters, and `docs/today-json.md` tells agents to treat it as data.
