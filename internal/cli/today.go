@@ -41,6 +41,7 @@ type todayFlags struct {
 	repo    string
 	project int
 	asJSON  bool
+	mark    bool
 }
 
 func defaultTodayDeps() todayDeps {
@@ -64,6 +65,9 @@ func newTodayCmd(deps todayDeps) *cobra.Command {
 			if cmd.Flags().Changed("project") && flags.project <= 0 {
 				return fmt.Errorf("invalid --project %d: it must be a positive number", flags.project)
 			}
+			if err := validateMark(flags); err != nil {
+				return err
+			}
 			return runToday(cmd, deps, flags)
 		},
 	}
@@ -71,6 +75,7 @@ func newTodayCmd(deps todayDeps) *cobra.Command {
 	cmd.Flags().StringVar(&flags.repo, "repo", "", "repository to report on, as owner/name")
 	cmd.Flags().IntVar(&flags.project, "project", 0, "GitHub Project number, instead of the one in .github/receipts.yml")
 	cmd.Flags().BoolVar(&flags.asJSON, "json", false, "print the complete data as JSON, keeping the last session")
+	cmd.Flags().BoolVar(&flags.mark, "mark", false, "with --json, move the last session as the text report does")
 	return cmd
 }
 
@@ -104,20 +109,35 @@ func runToday(cmd *cobra.Command, deps todayDeps, flags todayFlags) error {
 	}
 
 	info := report.Info{Repo: repo, Since: since, SinceSource: source, Project: board}
+	write := report.Text
 	if flags.asJSON {
-		return report.JSON(cmd.OutOrStdout(), result, info)
+		write = report.JSON
 	}
-	if err := report.Text(cmd.OutOrStdout(), result, info); err != nil {
+	if err := write(cmd.OutOrStdout(), result, info); err != nil {
 		return err
 	}
 
 	// Only a report someone read moves the session forward. Otherwise an agent
-	// reading --json, a look back with --since, or a board that couldn't be read
-	// would hide news from the next report.
-	if flags.since == "" && boardRead {
+	// reading --json without --mark, a look back with --since, or a board that
+	// couldn't be read would hide news from the next report.
+	if flags.since == "" && boardRead && (!flags.asJSON || flags.mark) {
 		if err := deps.store.Save(repo, start); err != nil {
 			warn(cmd, err.Error())
 		}
+	}
+	return nil
+}
+
+// validateMark rejects --mark where it would do nothing or contradict another
+// flag: the text report already moves the session, and --since never does.
+func validateMark(flags todayFlags) error {
+	switch {
+	case !flags.mark:
+		return nil
+	case !flags.asJSON:
+		return errors.New("--mark only works with --json: the text report already moves the last session")
+	case flags.since != "":
+		return errors.New("--mark can't be used with --since: a look back never moves the last session")
 	}
 	return nil
 }
