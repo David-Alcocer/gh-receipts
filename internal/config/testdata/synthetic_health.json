@@ -1,0 +1,1 @@
+{"data": {"repository": {"object": {"text": "project: 2\nhealth:\n  maxPRSize: 250\n  maxFirstReviewHours: 8\n  maxMergeHours: 72\n  staleDays: 5\n"}}}}

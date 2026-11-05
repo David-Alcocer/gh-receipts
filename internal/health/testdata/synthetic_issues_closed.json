@@ -1,0 +1,8 @@
+{"data": {"search": {
+  "issueCount": 2,
+  "pageInfo": {"hasNextPage": false, "endCursor": "I2"},
+  "nodes": [
+    {"number": 30, "createdAt": "2026-09-01T08:00:00Z", "closedAt": "2026-10-28T08:00:00Z", "author": {"__typename": "User"}},
+    {"number": 31, "createdAt": "2026-10-25T08:00:00Z", "closedAt": "2026-11-02T08:00:00Z", "author": {"__typename": "User"}}
+  ]
+}}}

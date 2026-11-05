@@ -1,0 +1,16 @@
+Last 14 days, Wed 21 Oct, 12:00 to Wed 4 Nov, 12:00 (calendar hours, bots excluded)
+
+PULL REQUESTS: 3 merged
+  Median size: 150 lines, limit 400 lines, from 3 PRs            https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
+  Median time to first review: 6 h, limit 24 h, from 2 of 3 PRs  https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
+  Median time to merge: 49.3 h, over the 48 h limit, from 3 PRs  https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
+
+STALE PRS: no activity for more than 2 days
+  #20 Add export  6 days idle             https://github.com/o/r/pull/20
+  #22 Try new layout  3 days idle, draft  https://github.com/o/r/pull/22
+
+ISSUES PER WEEK
+  21 Oct – 28 Oct  2 opened  https://github.com/o/r/issues?q=is%3Aissue+created%3A2026-10-21T12%3A00%3A00Z..2026-10-28T12%3A00%3A00Z
+  21 Oct – 28 Oct  1 closed  https://github.com/o/r/issues?q=is%3Aissue+closed%3A2026-10-21T12%3A00%3A00Z..2026-10-28T12%3A00%3A00Z
+  28 Oct – 4 Nov  1 opened   https://github.com/o/r/issues?q=is%3Aissue+created%3A2026-10-28T12%3A00%3A00Z..2026-11-04T12%3A00%3A00Z
+  28 Oct – 4 Nov  0 closed   https://github.com/o/r/issues?q=is%3Aissue+closed%3A2026-10-28T12%3A00%3A00Z..2026-11-04T12%3A00%3A00Z

@@ -1,0 +1,20 @@
+{"data": {"search": {
+  "issueCount": 4,
+  "pageInfo": {"hasNextPage": true, "endCursor": "M1"},
+  "nodes": [
+    {"number": 10, "url": "https://github.com/o/r/pull/10", "additions": 120, "deletions": 30,
+     "createdAt": "2026-10-30T09:00:00Z", "mergedAt": "2026-10-31T09:00:00Z",
+     "author": {"__typename": "User", "login": "octocat"},
+     "reviews": {"pageInfo": {"hasNextPage": false}, "nodes": [
+       {"submittedAt": "2026-10-30T10:00:00Z", "author": {"__typename": "User", "login": "octocat"}},
+       {"submittedAt": "2026-10-30T11:00:00Z", "author": {"__typename": "Bot", "login": "copilot-pull-request-reviewer"}},
+       {"submittedAt": null, "author": {"__typename": "User", "login": "hubot"}},
+       {"submittedAt": "2026-10-30T15:00:00Z", "author": {"__typename": "User", "login": "monalisa"}},
+       {"submittedAt": "2026-10-30T16:00:00Z", "author": {"__typename": "User", "login": "hubot"}}
+     ]}},
+    {"number": 11, "url": "https://github.com/o/r/pull/11", "additions": 3, "deletions": 1,
+     "createdAt": "2026-10-30T09:00:00Z", "mergedAt": "2026-10-30T10:00:00Z",
+     "author": {"__typename": "Bot", "login": "dependabot"},
+     "reviews": {"pageInfo": {"hasNextPage": false}, "nodes": []}}
+  ]
+}}}

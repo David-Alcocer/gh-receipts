@@ -1,0 +1,18 @@
+{"data": {"search": {
+  "issueCount": 4,
+  "pageInfo": {"hasNextPage": false, "endCursor": "M2"},
+  "nodes": [
+    {"number": 12, "url": "https://github.com/o/r/pull/12", "additions": 10, "deletions": 0,
+     "createdAt": "2026-11-01T09:00:00Z", "mergedAt": "2026-11-02T09:00:00Z",
+     "author": {"__typename": "User", "login": "octocat"},
+     "reviews": {"pageInfo": {"hasNextPage": false}, "nodes": [
+       {"submittedAt": "2026-11-01T12:00:00Z", "author": null}
+     ]}},
+    {"number": 13, "url": "https://github.com/o/r/pull/13", "additions": 50, "deletions": 50,
+     "createdAt": "2026-11-01T09:00:00Z", "mergedAt": "2026-11-03T09:00:00Z",
+     "author": {"__typename": "User", "login": "monalisa"},
+     "reviews": {"pageInfo": {"hasNextPage": true}, "nodes": [
+       {"submittedAt": "2026-11-01T10:00:00Z", "author": {"__typename": "User", "login": "monalisa"}}
+     ]}}
+  ]
+}}}
