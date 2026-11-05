@@ -1,0 +1,12 @@
+{"data": {"search": {
+  "issueCount": 3,
+  "pageInfo": {"hasNextPage": false, "endCursor": "S1"},
+  "nodes": [
+    {"number": 20, "title": "Add export", "url": "https://github.com/o/r/pull/20", "isDraft": false,
+     "updatedAt": "2026-10-29T08:00:00Z", "author": {"__typename": "User"}},
+    {"number": 21, "title": "Bump deps", "url": "https://github.com/o/r/pull/21", "isDraft": false,
+     "updatedAt": "2026-10-20T08:00:00Z", "author": {"__typename": "Bot"}},
+    {"number": 22, "title": "Try new layout", "url": "https://github.com/o/r/pull/22", "isDraft": true,
+     "updatedAt": "2026-11-01T08:00:00Z", "author": null}
+  ]
+}}}

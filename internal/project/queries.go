@@ -30,15 +30,4 @@ fragment projectItems on ProjectV2 {
   }
 }
 `
-
-	// configQuery reads the configuration from the default branch, so it also
-	// works with --repo outside a clone.
-	configQuery = `query ReceiptsConfig($owner: String!, $name: String!) {
-  repository(owner: $owner, name: $name) {
-    object(expression: "HEAD:.github/receipts.yml") {
-      ... on Blob { text }
-    }
-  }
-}
-`
 )

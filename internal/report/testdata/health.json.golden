@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "repository": "o/r",
+  "since": "2026-10-21T12:00:00Z",
+  "until": "2026-11-04T12:00:00Z",
+  "thresholds": {
+    "maxPRSize": 400,
+    "maxFirstReviewHours": 24,
+    "maxMergeHours": 48,
+    "staleDays": 2
+  },
+  "mergedPullRequests": {
+    "count": 3,
+    "url": "https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z"
+  },
+  "prSize": {
+    "median": 150,
+    "count": 3,
+    "limit": 400,
+    "overLimit": false
+  },
+  "firstReviewHours": {
+    "median": 6.04,
+    "count": 2,
+    "limit": 24,
+    "overLimit": false
+  },
+  "mergeHours": {
+    "median": 49.25,
+    "count": 3,
+    "limit": 48,
+    "overLimit": true
+  },
+  "stalePullRequests": [
+    {
+      "number": 20,
+      "title": "Add\texport",
+      "url": "https://github.com/o/r/pull/20",
+      "draft": false,
+      "updatedAt": "2026-10-29T12:00:00Z",
+      "idleDays": 6
+    },
+    {
+      "number": 22,
+      "title": "Try new layout",
+      "url": "https://github.com/o/r/pull/22",
+      "draft": true,
+      "updatedAt": "2026-11-01T12:00:00Z",
+      "idleDays": 3
+    }
+  ],
+  "issueWeeks": [
+    {
+      "start": "2026-10-21T12:00:00Z",
+      "end": "2026-10-28T12:00:00Z",
+      "opened": 2,
+      "closed": 1,
+      "openedUrl": "https://github.com/o/r/issues?q=is%3Aissue+created%3A2026-10-21T12%3A00%3A00Z..2026-10-28T12%3A00%3A00Z",
+      "closedUrl": "https://github.com/o/r/issues?q=is%3Aissue+closed%3A2026-10-21T12%3A00%3A00Z..2026-10-28T12%3A00%3A00Z"
+    },
+    {
+      "start": "2026-10-28T12:00:00Z",
+      "end": "2026-11-04T12:00:00Z",
+      "opened": 1,
+      "closed": 0,
+      "openedUrl": "https://github.com/o/r/issues?q=is%3Aissue+created%3A2026-10-28T12%3A00%3A00Z..2026-11-04T12%3A00%3A00Z",
+      "closedUrl": "https://github.com/o/r/issues?q=is%3Aissue+closed%3A2026-10-28T12%3A00%3A00Z..2026-11-04T12%3A00%3A00Z"
+    }
+  ],
+  "warnings": []
+}
