@@ -24,11 +24,13 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `reviewRequests` | list of PullRequest | Open PRs requesting the viewer's review, whenever they were opened |
 | `reviews` | list of Review | Reviews submitted since `since` |
 | `comments` | list of Comment | Conversation and inline comments since `since` |
+| `issues` | list of Issue | Issues updated since `since`, so a reader can tell whose they are |
+| `issueEvents` | list of IssueEvent | Changes to those issues since `since` |
 | `failedChecks` | list of FailedCheck | Failed checks on default branch commits since `since` |
 | `project` | Project or `null` | Items updated since `since`; `null` when no project is selected or it couldn't be read |
 | `warnings` | list of strings | Reasons the data may be incomplete |
 
-Bots are excluded as authors of PRs, reviews and comments.
+Bots are excluded as authors of PRs, reviews and comments, and as the people behind issue changes.
 
 ### Project
 
@@ -86,6 +88,31 @@ Bots are excluded as authors of PRs, reviews and comments.
 | `parentAuthor` | string | Author of the issue or PR |
 | `onPullRequest` | boolean | `false` when the parent is an issue |
 | `reviewUrl` | string | Review containing an inline comment; empty for conversation comments |
+
+### Issue
+
+| Field | Type | Description |
+|---|---|---|
+| `number` | number | Issue number |
+| `title` | string | Title |
+| `url` | string | Link to the issue |
+| `state` | string | `OPEN` or `CLOSED` |
+| `assignees` | list of strings | Logins it is assigned to now, at most 20 |
+
+### IssueEvent
+
+| Field | Type | Description |
+|---|---|---|
+| `issueNumber` | number | The issue |
+| `kind` | string | `closed`, `reopened`, `assigned`, `unassigned`, `renamed`, `labeled`, `unlabeled`, `milestoned`, `demilestoned` or `edited` |
+| `actor` | string | Who made the change; `ghost` for a deleted account |
+| `detail` | string | For `closed`, the reason (`COMPLETED`, `NOT_PLANNED`, `DUPLICATE`, or empty); for `assigned` and `unassigned`, the assignee; for `renamed`, the new title; for labels and milestones, their name; empty otherwise |
+| `createdAt` | string | When it happened, RFC 3339 |
+| `url` | string | The event for `closed`; the issue for the rest, because GitHub gives other events no link |
+
+`edited` means the description was edited. GitHub only says who edited it last and when, so an earlier edit in the window by someone else is lost when another edit follows, and the change itself isn't included: read the issue for the current text. Only the last 50 changes of each issue in the window are read; a warning names any issue with more.
+
+The text report and `context` show these changes, and comments on issues, only for the viewer's issues: assigned to the viewer now, or unassigned from them since `since`. Changes and comments by the viewer are left out there.
 
 ### FailedCheck
 

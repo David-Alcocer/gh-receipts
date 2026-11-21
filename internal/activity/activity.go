@@ -22,9 +22,49 @@ type Activity struct {
 	ReviewRequests []PullRequest
 	Reviews        []Review
 	Comments       []Comment
-	FailedChecks   []FailedCheck
+	// Issues are the issues updated since the start of the window, so the
+	// report can tell whose they are. IssueEvents are their changes.
+	Issues       []Issue
+	IssueEvents  []IssueEvent
+	FailedChecks []FailedCheck
 	// Warnings describes results that may be incomplete.
 	Warnings []string
+}
+
+// Issue is an issue and who it is assigned to now.
+type Issue struct {
+	Number    int      `json:"number"`
+	Title     string   `json:"title"`
+	URL       string   `json:"url"`
+	State     string   `json:"state"`
+	Assignees []string `json:"assignees"`
+}
+
+// Kinds of IssueEvent.
+const (
+	EventClosed       = "closed"
+	EventReopened     = "reopened"
+	EventAssigned     = "assigned"
+	EventUnassigned   = "unassigned"
+	EventRenamed      = "renamed"
+	EventLabeled      = "labeled"
+	EventUnlabeled    = "unlabeled"
+	EventMilestoned   = "milestoned"
+	EventDemilestoned = "demilestoned"
+	EventEdited       = "edited"
+)
+
+// IssueEvent is a change to an issue made by a person. Detail depends on Kind:
+// the state reason for closed, the assignee for assigned and unassigned, the
+// new title for renamed, the label or milestone name, and empty otherwise.
+type IssueEvent struct {
+	IssueNumber int       `json:"issueNumber"`
+	Kind        string    `json:"kind"`
+	Actor       string    `json:"actor"`
+	Detail      string    `json:"detail"`
+	CreatedAt   time.Time `json:"createdAt"`
+	// URL is the event itself when GitHub gives it one, and the issue otherwise.
+	URL string `json:"url"`
 }
 
 // PullRequest is a pull request and its source.

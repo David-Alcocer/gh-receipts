@@ -40,6 +40,8 @@ type document struct {
 	ReviewRequests []activity.PullRequest `json:"reviewRequests"`
 	Reviews        []activity.Review      `json:"reviews"`
 	Comments       []activity.Comment     `json:"comments"`
+	Issues         []activity.Issue       `json:"issues"`
+	IssueEvents    []activity.IssueEvent  `json:"issueEvents"`
 	FailedChecks   []activity.FailedCheck `json:"failedChecks"`
 	Project        *project.Project       `json:"project"`
 	Warnings       []string               `json:"warnings"`
@@ -61,6 +63,8 @@ func JSON(w io.Writer, a activity.Activity, info Info) error {
 		ReviewRequests: nonNil(a.ReviewRequests),
 		Reviews:        nonNil(a.Reviews),
 		Comments:       nonNil(a.Comments),
+		Issues:         nonNil(a.Issues),
+		IssueEvents:    nonNil(a.IssueEvents),
 		FailedChecks:   nonNil(a.FailedChecks),
 		Project:        info.Project,
 		Warnings:       nonNil(a.Warnings),

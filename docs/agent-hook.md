@@ -28,7 +28,7 @@ MERGED
 
 ## What it shows
 
-The sections of [`next`](next-json.md) (your open PRs, reviews waiting for you, assigned issues with their criteria), then the sections of `today` about what changed (new comments and reviews on your PRs, failed CI on the default branch, merged PRs, and the Project board when one is configured). Reviews waiting for you appear once, with every open request, not only the new ones. Empty sections are left out.
+The sections of [`next`](next-json.md) (your open PRs, reviews waiting for you, assigned issues with their criteria), then the sections of `today` about what changed (comments and changes by other people on your issues, such as edited criteria, an issue closed as not planned or one taken from you; new comments and reviews on your PRs; failed CI on the default branch; merged PRs; and the Project board when one is configured). Reviews waiting for you appear once, with every open request, not only the new ones. Empty sections are left out.
 
 ## Rules
 
