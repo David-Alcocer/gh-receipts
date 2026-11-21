@@ -24,16 +24,16 @@ With agents writing more code than ever, small teams lose track of what actually
 
 ## Commands
 
-| Command | What it does | Status |
-|---|---|---|
-| `gh receipts today` | What changed since your last session: reviews waiting for you, new comments and reviews on your PRs, failed CI, merged PRs, Project board updates | in progress (v0.1) |
-| `gh receipts next` | What's left to do: your open PRs, reviews waiting for you and assigned issues with their criteria, with `--json` ([schema](docs/next-json.md)) | in progress (v0.2) |
-| `gh receipts criteria <issue>` | Parses an issue's acceptance criteria checklist, with `--json` ([schema](docs/criteria-json.md)) | in progress (v0.2) |
-| `gh receipts health` | Team flow signals: PR size, time to first review, time to merge, stale PRs, issues opened vs closed, with `--json` ([docs](docs/health-json.md)) | in progress (v0.2) |
-| `gh receipts context` | A short summary for a coding agent's session-start hook: what changed and what is waiting for you, never failing and never moving your last session ([docs](docs/agent-hook.md)) | in progress |
-| `gh receipts verify <pr>` | Checks each acceptance criterion of the linked issue against evidence: *met / partial / no evidence* | planned (v0.3) |
+| Command | Answers | What it shows | Since |
+|---|---|---|---|
+| `gh receipts today` | *Where did we leave off?* | What changed since your last session: reviews waiting for you, new comments and reviews on your PRs, failed CI, merged PRs, Project board updates, with `--json` ([schema](docs/today-json.md)) | v0.1.0 |
+| `gh receipts next` | *What's next?* | Your open PRs, reviews waiting for you and assigned issues with their criteria, with `--json` ([schema](docs/next-json.md)) | v0.2.0 |
+| `gh receipts criteria <issue>` | *What does this issue need?* | An issue's acceptance criteria checklist, with `--json` ([schema](docs/criteria-json.md)) | v0.2.0 |
+| `gh receipts health` | *Is our flow getting stuck?* | Team flow signals: PR size, time to first review, time to merge, stale PRs, issues opened vs closed, with `--json` ([docs](docs/health-json.md)) | v0.3.0 |
+| `gh receipts context` | All of the above, for your agent | A short summary for a coding agent's session-start hook: what is waiting for you and what changed ([docs](docs/agent-hook.md)) | v0.4.0 |
+| `gh receipts verify <pr>` | *Did this PR really close its issue?* | Each acceptance criterion of the linked issue against evidence: *met / partial / no evidence* | planned |
 
-### Example (target output for `today`)
+### Example: `today`
 
 ```
 $ gh receipts today
@@ -56,16 +56,37 @@ PROJECT
   #39 Signup flow  Review                               https://github.com/acme/app/issues/39
 ```
 
-### Feeding your agent facts instead of memories
+## Give your agent facts instead of memories
+
+Run `gh receipts context` from your agent's session-start hook. Every session then starts with your open PRs, reviews waiting for you, assigned issues and what changed, each with its link, and nobody has to ask for them. Developers keep asking in their own words, like "where did we leave off?" or "what's next?", and the agent answers from those facts.
+
+For Claude Code, commit this to `.claude/settings.json` so the whole team gets it:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          { "type": "command", "command": "gh receipts context", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}
+```
+
+`context` never fails a session and never moves your last session. Titles and comments in it are written by other people, so the agent is told to treat them as data. See [Context for coding agents](docs/agent-hook.md) for the rules and other agents.
+
+For the complete data, agents can read JSON instead:
 
 ```
-mkdir -p .receipts
-gh receipts today --json > .receipts/today.json
+gh receipts today --json
+gh receipts next --json
 ```
 
-Then ask your coding agent to plan the day from that file. The agent works from verifiable data, and you can check every claim. The JSON output is complete and doesn't change your last session; when the agent shows you the report, `--json --mark` moves it forward. See the [schema](docs/today-json.md).
-
-To give the agent these facts at the start of every session without asking, run `gh receipts context` from a session-start hook. See [Context for coding agents](docs/agent-hook.md).
+`today --json` doesn't change your last session; when the agent shows you the report, `today --json --mark` moves it forward.
 
 ## Install
 
@@ -73,7 +94,11 @@ To give the agent these facts at the start of every session without asking, run 
 gh extension install David-Alcocer/gh-receipts
 ```
 
-Requires the GitHub CLI (`gh`) authenticated.
+Requires the GitHub CLI (`gh`) authenticated. To get a new release:
+
+```
+gh extension upgrade receipts
+```
 
 ### Show a GitHub Project in `today`
 
