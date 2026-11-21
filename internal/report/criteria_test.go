@@ -87,18 +87,64 @@ func TestCriteriaTextRemovesControlCharacters(t *testing.T) {
 	}
 }
 
-func TestCriteriaTextShortensLongItemsButJSONDoesNot(t *testing.T) {
-	long := strings.Repeat("a", lineExcerptLength+1)
-	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: long}}})
+func TestCriteriaTextShowsLongItemsInFull(t *testing.T) {
+	long := "The text output of criteria shows every item in full, without cutting it with an ellipsis"
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{
+		{Text: long, Checkbox: true},
+		{Text: "Short", Checkbox: true, Depth: 1},
+	}})
 
-	if got := renderCriteria(t, issue); strings.Contains(got, long) || !strings.Contains(got, strings.Repeat("a", lineExcerptLength)+"…") {
+	want := "" +
+		"#5 Parser  0/2                                                       " + testIssueURL + "\n" +
+		"  [ ] The text output of criteria shows every item in full, without  " + testIssueURL + "\n" +
+		"      cutting it with an ellipsis\n" +
+		"    [ ] Short                                                        " + testIssueURL + "\n"
+	if got := renderCriteria(t, issue); got != want {
+		t.Errorf("text =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestCriteriaTextIndentsContinuationsOfNestedItems(t *testing.T) {
+	long := strings.Repeat("word ", 20)
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: long, Depth: 2}}})
+
+	lines := strings.Split(strings.TrimSuffix(renderCriteria(t, issue), "\n"), "\n")
+
+	if len(lines) != 3 || !strings.HasPrefix(lines[1], "      - word") || !strings.HasPrefix(lines[2], "        word") || strings.Contains(lines[2], "https://") {
+		t.Errorf("lines = %q", lines)
+	}
+}
+
+func TestCriteriaTextKeepsLongWordsWhole(t *testing.T) {
+	link := "https://example.com/" + strings.Repeat("x", criteriaWrapWidth)
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: "See " + link + " first", Checkbox: true}}})
+
+	got := renderCriteria(t, issue)
+
+	if !strings.Contains(got, "\n      "+link+"\n") || !strings.Contains(got, "[ ] See  ") || !strings.Contains(got, "\n      first\n") {
 		t.Errorf("text = %q", got)
 	}
+}
 
+func TestCriteriaTextHasNoTrailingSpaces(t *testing.T) {
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: strings.Repeat("word ", 30), Checkbox: true}}})
+
+	for _, line := range strings.Split(renderCriteria(t, issue), "\n") {
+		if strings.HasSuffix(line, " ") {
+			t.Errorf("trailing spaces in %q", line)
+		}
+	}
+}
+
+func TestCriteriaJSONKeepsTheTextAsWritten(t *testing.T) {
+	long := strings.Repeat("a", criteriaWrapWidth+1) + " end"
+	issue := testIssue(criteria.Result{Found: true, Items: []criteria.Item{{Text: long}}})
 	var out bytes.Buffer
+
 	if err := CriteriaJSON(&out, testRepo, issue); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if !strings.Contains(out.String(), long) {
 		t.Errorf("JSON = %s", out.String())
 	}
@@ -151,5 +197,13 @@ func TestCriteriaJSONUsesAnEmptyList(t *testing.T) {
 	}
 	if document.Found || string(document.Items) != "[]" {
 		t.Errorf("document = %+v, items = %s", document, document.Items)
+	}
+}
+
+func TestWrapWordsFillsLinesUpToTheWidth(t *testing.T) {
+	exact := strings.Repeat("a", 30) + " " + strings.Repeat("b", 33)
+
+	if got := wrapWords(exact+" c", len(exact)); len(got) != 2 || got[0] != exact || got[1] != "c" {
+		t.Errorf("lines = %q", got)
 	}
 }

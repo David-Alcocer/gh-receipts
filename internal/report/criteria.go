@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"text/tabwriter"
+	"unicode/utf8"
 
 	"github.com/cli/go-gh/v2/pkg/repository"
 
@@ -48,15 +48,65 @@ func CriteriaJSON(w io.Writer, repo repository.Repository, issue criteria.Issue)
 	return nil
 }
 
-// CriteriaText writes a summary line and every item, shortened to fit a line.
-// GitHub has no link for a single checkbox, so each line points to the issue.
+// criteriaWrapWidth is the most characters of an item on one line. Longer items
+// continue on the next lines instead of being cut, because reading the
+// criteria is the point of the command.
+const criteriaWrapWidth = 64
+
+// CriteriaText writes a summary line and every item in full. GitHub has no link
+// for a single checkbox, so the first line of each item points to the issue;
+// the lines that continue it don't repeat the link.
 func CriteriaText(w io.Writer, issue criteria.Issue) error {
-	columns := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(columns, "#%d %s  %s\t%s\n", issue.Number, clean(issue.Title), criteriaSummary(issue.Result), issue.URL)
-	for _, item := range issue.Items {
-		fmt.Fprintf(columns, "  %s%s %s\t%s\n", strings.Repeat("  ", item.Depth), itemMarker(item), shorten(clean(item.Text)), issue.URL)
+	type row struct {
+		cell         string
+		continuation []string
 	}
-	return columns.Flush()
+	rows := []row{{cell: fmt.Sprintf("#%d %s  %s", issue.Number, clean(issue.Title), criteriaSummary(issue.Result))}}
+	for _, item := range issue.Items {
+		indent := "  " + strings.Repeat("  ", item.Depth)
+		marker := itemMarker(item)
+		lines := wrapWords(clean(item.Text), criteriaWrapWidth)
+		r := row{cell: indent + marker + " " + lines[0]}
+		for _, rest := range lines[1:] {
+			r.continuation = append(r.continuation, indent+strings.Repeat(" ", utf8.RuneCountInString(marker)+1)+rest)
+		}
+		rows = append(rows, r)
+	}
+
+	width := 0
+	for _, r := range rows {
+		width = max(width, utf8.RuneCountInString(r.cell))
+	}
+	var out strings.Builder
+	for _, r := range rows {
+		padding := strings.Repeat(" ", width-utf8.RuneCountInString(r.cell)+2)
+		fmt.Fprintf(&out, "%s%s%s\n", r.cell, padding, issue.URL)
+		for _, line := range r.continuation {
+			fmt.Fprintf(&out, "%s\n", line)
+		}
+	}
+	_, err := io.WriteString(w, out.String())
+	return err
+}
+
+// wrapWords splits text into lines of at most width characters, breaking only
+// between words. A word longer than width, such as a link, gets a line of its
+// own instead of being cut.
+func wrapWords(text string, width int) []string {
+	var lines []string
+	current := ""
+	for _, word := range strings.Fields(text) {
+		switch {
+		case current == "":
+			current = word
+		case utf8.RuneCountInString(current)+1+utf8.RuneCountInString(word) <= width:
+			current += " " + word
+		default:
+			lines = append(lines, current)
+			current = word
+		}
+	}
+	return append(lines, current)
 }
 
 // criteriaSummary counts checked boxes. Plain list items can't be checked, so
