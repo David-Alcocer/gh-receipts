@@ -78,11 +78,7 @@ func nextSections(repo repository.Repository, p pending.Pending) []section {
 			lines:   openPullRequestLines(p.PullRequests),
 			moreURL: base + "/pulls?q=" + url.QueryEscape("is:pr is:open author:@me"),
 		},
-		{
-			title:   "WAITING FOR YOUR REVIEW",
-			lines:   pullRequestLines(p.ReviewRequests),
-			moreURL: base + "/pulls?q=" + url.QueryEscape("is:pr is:open review-requested:@me"),
-		},
+		reviewRequestSection(repo, p.ReviewRequests),
 		{
 			title:   "ISSUES ASSIGNED TO YOU",
 			lines:   assignedIssueLines(p.Issues),

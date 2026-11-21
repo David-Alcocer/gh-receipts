@@ -10,6 +10,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/cli/go-gh/v2/pkg/repository"
+
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
 	"github.com/David-Alcocer/gh-receipts/internal/project"
 )
@@ -60,13 +62,23 @@ func Text(w io.Writer, a activity.Activity, info Info) error {
 }
 
 func visibleSections(a activity.Activity, info Info) []section {
+	all := append([]section{reviewRequestSection(info.Repo, a.ReviewRequests)}, changeSections(a, info)...)
+	return slices.DeleteFunc(all, func(s section) bool { return len(s.lines) == 0 })
+}
+
+func reviewRequestSection(repo repository.Repository, prs []activity.PullRequest) section {
+	return section{
+		title:   "WAITING FOR YOUR REVIEW",
+		lines:   pullRequestLines(prs),
+		moreURL: repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:open review-requested:@me"),
+	}
+}
+
+// changeSections are the sections about what happened since info.Since,
+// including empty ones.
+func changeSections(a activity.Activity, info Info) []section {
 	base := repositoryURL(info.Repo)
 	all := []section{
-		{
-			title:   "WAITING FOR YOUR REVIEW",
-			lines:   pullRequestLines(a.ReviewRequests),
-			moreURL: base + "/pulls?q=" + url.QueryEscape("is:pr is:open review-requested:@me"),
-		},
 		{
 			title:   "NEW COMMENTS ON YOUR PRS",
 			lines:   feedbackLines(a),
@@ -86,15 +98,20 @@ func visibleSections(a activity.Activity, info Info) []section {
 	if info.Project != nil {
 		all = append(all, section{title: "PROJECT", lines: projectLines(info.Project.Items), moreURL: info.Project.URL})
 	}
-	return slices.DeleteFunc(all, func(s section) bool { return len(s.lines) == 0 })
+	return all
 }
 
 func writeSection(w io.Writer, s section) error {
+	return writeLimitedSection(w, s, sectionLimit)
+}
+
+// writeLimitedSection shows at most limit lines, then links to the full list.
+func writeLimitedSection(w io.Writer, s section, limit int) error {
 	if _, err := fmt.Fprintf(w, "\n%s\n", s.title); err != nil {
 		return err
 	}
 
-	shown := s.lines[:min(len(s.lines), sectionLimit)]
+	shown := s.lines[:min(len(s.lines), limit)]
 	columns := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	for _, l := range shown {
 		fmt.Fprintf(columns, "  %s\t%s\n", l.text, l.url)

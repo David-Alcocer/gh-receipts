@@ -93,16 +93,9 @@ func runToday(cmd *cobra.Command, deps todayDeps, flags todayFlags) error {
 		return err
 	}
 
-	result, err := deps.fetch(cmd.Context(), repo, since)
+	result, board, boardRead, err := fetchChanges(cmd.Context(), deps, flags.project, repo, since)
 	if err != nil {
 		return err
-	}
-	board, boardRead, err := fetchBoard(cmd.Context(), deps, flags.project, repo, since, result.Viewer)
-	if err != nil {
-		return err
-	}
-	if !boardRead {
-		result.Warnings = append(result.Warnings, project.ErrMissingScope.Error())
 	}
 	for _, warning := range result.Warnings {
 		warn(cmd, warning)
@@ -140,6 +133,24 @@ func validateMark(flags todayFlags) error {
 		return errors.New("--mark can't be used with --since: a look back never moves the last session")
 	}
 	return nil
+}
+
+// fetchChanges reads the activity since the given time and the selected board.
+// When the board can't be read for lack of scope, it adds a warning and returns
+// false.
+func fetchChanges(ctx context.Context, deps todayDeps, projectNumber int, repo repository.Repository, since time.Time) (activity.Activity, *project.Project, bool, error) {
+	result, err := deps.fetch(ctx, repo, since)
+	if err != nil {
+		return activity.Activity{}, nil, false, err
+	}
+	board, boardRead, err := fetchBoard(ctx, deps, projectNumber, repo, since, result.Viewer)
+	if err != nil {
+		return activity.Activity{}, nil, false, err
+	}
+	if !boardRead {
+		result.Warnings = append(result.Warnings, project.ErrMissingScope.Error())
+	}
+	return result, board, boardRead, nil
 }
 
 // fetchBoard returns the selected project, or nil when there is none. A missing
@@ -189,10 +200,19 @@ func resolveSince(cmd *cobra.Command, deps todayDeps, repo repository.Repository
 		return since, "--since", err
 	}
 
-	last, found, err := deps.store.LastRun(repo)
+	since, source, err := lastSession(deps.store, repo, now)
 	if err != nil {
 		warn(cmd, err.Error())
-		return now.Add(-firstRunWindow), "last 24 hours", nil
+	}
+	return since, source, nil
+}
+
+// lastSession returns when the last session started. When it can't be read, it
+// returns the last 24 hours along with the error.
+func lastSession(store lastRunStore, repo repository.Repository, now time.Time) (time.Time, string, error) {
+	last, found, err := store.LastRun(repo)
+	if err != nil {
+		return now.Add(-firstRunWindow), "last 24 hours", err
 	}
 	if !found {
 		return now.Add(-firstRunWindow), "first run, last 24 hours", nil

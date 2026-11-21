@@ -30,6 +30,7 @@ With agents writing more code than ever, small teams lose track of what actually
 | `gh receipts next` | What's left to do: your open PRs, reviews waiting for you and assigned issues with their criteria, with `--json` ([schema](docs/next-json.md)) | in progress (v0.2) |
 | `gh receipts criteria <issue>` | Parses an issue's acceptance criteria checklist, with `--json` ([schema](docs/criteria-json.md)) | in progress (v0.2) |
 | `gh receipts health` | Team flow signals: PR size, time to first review, time to merge, stale PRs, issues opened vs closed, with `--json` ([docs](docs/health-json.md)) | in progress (v0.2) |
+| `gh receipts context` | A short summary for a coding agent's session-start hook: what changed and what is waiting for you, never failing and never moving your last session ([docs](docs/agent-hook.md)) | in progress |
 | `gh receipts verify <pr>` | Checks each acceptance criterion of the linked issue against evidence: *met / partial / no evidence* | planned (v0.3) |
 
 ### Example (target output for `today`)
@@ -63,6 +64,8 @@ gh receipts today --json > .receipts/today.json
 ```
 
 Then ask your coding agent to plan the day from that file. The agent works from verifiable data, and you can check every claim. The JSON output is complete and doesn't change your last session; when the agent shows you the report, `--json --mark` moves it forward. See the [schema](docs/today-json.md).
+
+To give the agent these facts at the start of every session without asking, run `gh receipts context` from a session-start hook. See [Context for coding agents](docs/agent-hook.md).
 
 ## Install
 
