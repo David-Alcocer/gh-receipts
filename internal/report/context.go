@@ -3,7 +3,9 @@ package report
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"slices"
+	"time"
 
 	"github.com/David-Alcocer/gh-receipts/internal/activity"
 	"github.com/David-Alcocer/gh-receipts/internal/pending"
@@ -42,6 +44,9 @@ func ContextText(w io.Writer, c Context) error {
 			return err
 		}
 	}
+	if c.Activity != nil && len(visibleChanges(c)) == 0 {
+		return writeLimitedSection(w, noChangesSection(c.Info), contextLimit)
+	}
 	return nil
 }
 
@@ -62,6 +67,20 @@ This summary doesn't move the last session. Once the developer has seen these ch
 	return nil
 }
 
+// noChangesSection says that the changes were read and there were none, so a
+// reader can tell it from changes that weren't read. It links to a search for
+// anything updated in the window.
+func noChangesSection(info Info) section {
+	search := fmt.Sprintf("repo:%s/%s updated:>=%s", info.Repo.Owner, info.Repo.Name, info.Since.UTC().Format(time.RFC3339))
+	text := fmt.Sprintf("Nothing since %s: no comments, issue changes, CI failures or merges", info.Since.Format(timeLayout))
+	searchURL := fmt.Sprintf("https://%s/search?q=%s&type=issues", info.Repo.Host, url.QueryEscape(search))
+	return section{title: "WHAT CHANGED", lines: []line{{text, searchURL}}}
+}
+
+func visibleChanges(c Context) []section {
+	return slices.DeleteFunc(changeSections(*c.Activity, c.Info), func(s section) bool { return len(s.lines) == 0 })
+}
+
 // contextSections shows review requests from the pending work, which lists all
 // of them, instead of only the ones requested since the last session.
 func contextSections(c Context) []section {
@@ -70,7 +89,7 @@ func contextSections(c Context) []section {
 		all = append(all, nextSections(c.Info.Repo, *c.Pending)...)
 	}
 	if c.Activity != nil {
-		all = append(all, changeSections(*c.Activity, c.Info)...)
+		all = append(all, visibleChanges(c)...)
 	}
-	return slices.DeleteFunc(all, func(s section) bool { return len(s.lines) == 0 })
+	return all
 }

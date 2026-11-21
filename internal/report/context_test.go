@@ -116,3 +116,41 @@ func TestContextTextRemovesControlCharactersFromNotes(t *testing.T) {
 		t.Errorf("text = %q", got)
 	}
 }
+
+const noChangesLine = "  Nothing since Thu 1 Oct, 00:00: no comments, issue changes, CI failures or merges  https://github.com/search?q=repo%3Ao%2Fr+updated%3A%3E%3D2026-10-01T00%3A00%3A00Z&type=issues\n"
+
+func TestContextTextSaysWhenNothingChanged(t *testing.T) {
+	p := samplePending()
+
+	got := renderContext(t, Context{Info: testInfo, Activity: &activity.Activity{}, Pending: &p})
+
+	if !strings.HasSuffix(got, "\nWHAT CHANGED\n"+noChangesLine) || !strings.Contains(got, "YOUR OPEN PRS") {
+		t.Errorf("text = %q", got)
+	}
+}
+
+func TestContextTextSaysNothingAboutChangesItCouldNotRead(t *testing.T) {
+	p := samplePending()
+
+	got := renderContext(t, Context{Info: testInfo, Pending: &p, Notes: []string{"couldn't read what changed: HTTP 502"}})
+
+	if strings.Contains(got, "WHAT CHANGED") || strings.Contains(got, "Nothing since") {
+		t.Errorf("text = %q", got)
+	}
+}
+
+func TestContextTextOmitsTheNoChangesLineWhenSomethingChanged(t *testing.T) {
+	got := renderContext(t, fullContext(t))
+
+	if strings.Contains(got, "WHAT CHANGED") {
+		t.Errorf("text = %q", got)
+	}
+}
+
+func TestContextTextKeepsOneLineWhenNothingAtAll(t *testing.T) {
+	got := renderContext(t, Context{Info: testInfo, Activity: &activity.Activity{}, Pending: &pending.Pending{}})
+
+	if strings.Contains(got, "WHAT CHANGED") || strings.Count(got, "Nothing") != 1 {
+		t.Errorf("text = %q", got)
+	}
+}
