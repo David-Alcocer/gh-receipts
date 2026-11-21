@@ -12,7 +12,7 @@ Use three queries. The rest only run when a nested list has more pages.
 
 `repo:OWNER/NAME updated:>=SINCE sort:updated-desc` returns issues and PRs together. Anything merged, opened, reviewed or commented on since the timestamp has also been updated, so merged PRs, opened PRs, reviews and comments all come from this one search.
 
-- **Filtered in code:** an update says nothing about a merge. An old PR that was touched recently also matches, and nested lists have no `since` argument, so every date is compared to the timestamp.
+- **Filtered in code:** an update says nothing about a merge. An old PR that was touched recently also matches, and nested lists have no `since` argument, so every date is compared to the timestamp. (Issue timelines do have one; decision 0012 uses it.)
 - **25 results per page:** pages of 100 got HTTP 502 and 504 from busy repositories. Pages of 25 and 50 worked on `nodejs/node`.
 - **Nested list sizes:** 100 threads of 100 comments inside a search page is rejected for exceeding 500,000 possible nodes, so threads use 50 and their comments 20.
 - **Read from the newest item (`last`):** older items only matter until the timestamp is passed. Comment lists stop there. Reviews and threads are read completely, because a review can be submitted long after it was started, and an old thread can receive a new comment.

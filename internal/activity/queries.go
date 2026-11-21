@@ -19,7 +19,10 @@ const (
 	// queries that could return more than 500,000 nodes, so threads and their
 	// comments use smaller pages. The search page has 25 results because busy
 	// repositories answered 100 with HTTP 502 and 504.
-	activityQuery = `query Activity($search: String!, $cursor: String) {
+	//
+	// Issues also bring their changes since the timestamp. timelineItems takes
+	// since, so the list only holds changes in the window.
+	activityQuery = `query Activity($search: String!, $cursor: String, $since: DateTime!) {
   search(query: $search, type: ISSUE, first: 25, after: $cursor) {
     issueCount
     pageInfo { hasNextPage endCursor }
@@ -45,6 +48,25 @@ const (
         createdAt
         author { __typename login }
         comments(last: 100) { ...commentPage }
+        state
+        lastEditedAt
+        editor { __typename login }
+        assignees(first: 20) { nodes { login } }
+        timelineItems(since: $since, last: 50, itemTypes: [CLOSED_EVENT, REOPENED_EVENT, ASSIGNED_EVENT, UNASSIGNED_EVENT, RENAMED_TITLE_EVENT, LABELED_EVENT, UNLABELED_EVENT, MILESTONED_EVENT, DEMILESTONED_EVENT]) {
+          pageInfo { hasPreviousPage startCursor }
+          nodes {
+            __typename
+            ... on ClosedEvent { createdAt url stateReason actor { __typename login } }
+            ... on ReopenedEvent { createdAt actor { __typename login } }
+            ... on AssignedEvent { createdAt actor { __typename login } assignee { ... on Actor { login } } }
+            ... on UnassignedEvent { createdAt actor { __typename login } assignee { ... on Actor { login } } }
+            ... on RenamedTitleEvent { createdAt actor { __typename login } currentTitle }
+            ... on LabeledEvent { createdAt actor { __typename login } label { name } }
+            ... on UnlabeledEvent { createdAt actor { __typename login } label { name } }
+            ... on MilestonedEvent { createdAt actor { __typename login } milestoneTitle }
+            ... on DemilestonedEvent { createdAt actor { __typename login } milestoneTitle }
+          }
+        }
       }
     }
   }

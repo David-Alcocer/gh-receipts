@@ -1,0 +1,268 @@
+{
+  "data": {
+    "search": {
+      "issueCount": 3,
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": null
+      },
+      "nodes": [
+        {
+          "__typename": "Issue",
+          "id": "I10",
+          "number": 10,
+          "title": "Issue 10",
+          "url": "https://github.com/o/r/issues/10",
+          "createdAt": "2026-09-01T00:00:00Z",
+          "author": {
+            "__typename": "User",
+            "login": "frank"
+          },
+          "state": "OPEN",
+          "lastEditedAt": "2026-10-04T00:00:00Z",
+          "editor": {
+            "__typename": "User",
+            "login": "ana"
+          },
+          "assignees": {
+            "nodes": [
+              {
+                "login": "me"
+              }
+            ]
+          },
+          "comments": {
+            "pageInfo": {
+              "hasPreviousPage": false,
+              "startCursor": null
+            },
+            "nodes": [
+              {
+                "url": "https://github.com/o/r/issues/10#issuecomment-101",
+                "bodyText": "Let's drop email login",
+                "createdAt": "2026-10-03T00:00:00Z",
+                "author": {
+                  "__typename": "User",
+                  "login": "ana"
+                }
+              }
+            ]
+          },
+          "timelineItems": {
+            "pageInfo": {
+              "hasPreviousPage": true,
+              "startCursor": "TI10"
+            },
+            "nodes": [
+              {
+                "__typename": "ClosedEvent",
+                "createdAt": "2026-10-05T00:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "luis"
+                },
+                "url": "https://github.com/o/r/issues/10#event-1",
+                "stateReason": "NOT_PLANNED"
+              },
+              {
+                "__typename": "ReopenedEvent",
+                "createdAt": "2026-10-06T00:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "luis"
+                }
+              },
+              {
+                "__typename": "AssignedEvent",
+                "createdAt": "2026-10-02T00:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "luis"
+                },
+                "assignee": {
+                  "login": "me"
+                }
+              },
+              {
+                "__typename": "UnassignedEvent",
+                "createdAt": "2026-10-02T01:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "luis"
+                },
+                "assignee": {
+                  "login": "bob"
+                }
+              },
+              {
+                "__typename": "RenamedTitleEvent",
+                "createdAt": "2026-10-02T02:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "ana"
+                },
+                "currentTitle": "New title"
+              },
+              {
+                "__typename": "LabeledEvent",
+                "createdAt": "2026-10-02T03:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "ana"
+                },
+                "label": {
+                  "name": "blocked"
+                }
+              },
+              {
+                "__typename": "UnlabeledEvent",
+                "createdAt": "2026-10-02T04:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "ana"
+                },
+                "label": {
+                  "name": "ready"
+                }
+              },
+              {
+                "__typename": "MilestonedEvent",
+                "createdAt": "2026-10-02T05:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "ana"
+                },
+                "milestoneTitle": "v1"
+              },
+              {
+                "__typename": "DemilestonedEvent",
+                "createdAt": "2026-10-02T06:00:00Z",
+                "actor": {
+                  "__typename": "User",
+                  "login": "ana"
+                },
+                "milestoneTitle": "v0"
+              },
+              {
+                "__typename": "LabeledEvent",
+                "createdAt": "2026-10-02T07:00:00Z",
+                "actor": {
+                  "__typename": "Bot",
+                  "login": "dependabot"
+                },
+                "label": {
+                  "name": "deps"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "__typename": "Issue",
+          "id": "I11",
+          "number": 11,
+          "title": "Issue 11",
+          "url": "https://github.com/o/r/issues/11",
+          "createdAt": "2026-09-01T00:00:00Z",
+          "author": {
+            "__typename": "User",
+            "login": "frank"
+          },
+          "state": "OPEN",
+          "lastEditedAt": "2026-09-02T00:00:00Z",
+          "editor": {
+            "__typename": "User",
+            "login": "ana"
+          },
+          "assignees": {
+            "nodes": []
+          },
+          "comments": {
+            "pageInfo": {
+              "hasPreviousPage": false,
+              "startCursor": null
+            },
+            "nodes": [
+              {
+                "url": "https://github.com/o/r/issues/11#issuecomment-111",
+                "bodyText": "Let's drop email login",
+                "createdAt": "2026-10-03T00:00:00Z",
+                "author": {
+                  "__typename": "User",
+                  "login": "ana"
+                }
+              }
+            ]
+          },
+          "timelineItems": {
+            "pageInfo": {
+              "hasPreviousPage": false,
+              "startCursor": null
+            },
+            "nodes": []
+          }
+        },
+        {
+          "__typename": "Issue",
+          "id": "I12",
+          "number": 12,
+          "title": "Issue 12",
+          "url": "https://github.com/o/r/issues/12",
+          "createdAt": "2026-09-01T00:00:00Z",
+          "author": {
+            "__typename": "User",
+            "login": "frank"
+          },
+          "state": "CLOSED",
+          "lastEditedAt": "2026-10-04T00:00:00Z",
+          "editor": {
+            "__typename": "Bot",
+            "login": "renovate"
+          },
+          "assignees": {
+            "nodes": [
+              {
+                "login": "me"
+              },
+              {
+                "login": "bob"
+              }
+            ]
+          },
+          "comments": {
+            "pageInfo": {
+              "hasPreviousPage": false,
+              "startCursor": null
+            },
+            "nodes": [
+              {
+                "url": "https://github.com/o/r/issues/12#issuecomment-121",
+                "bodyText": "Let's drop email login",
+                "createdAt": "2026-10-03T00:00:00Z",
+                "author": {
+                  "__typename": "User",
+                  "login": "ana"
+                }
+              }
+            ]
+          },
+          "timelineItems": {
+            "pageInfo": {
+              "hasPreviousPage": false,
+              "startCursor": null
+            },
+            "nodes": [
+              {
+                "__typename": "ClosedEvent",
+                "createdAt": "2026-10-05T00:00:00Z",
+                "actor": null,
+                "url": "https://github.com/o/r/issues/12#event-2",
+                "stateReason": "COMPLETED"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

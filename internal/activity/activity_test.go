@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -22,6 +23,7 @@ type fakeClient struct {
 	t        *testing.T
 	fixtures map[string]string
 	searches []string
+	since    []string
 	err      error
 }
 
@@ -38,6 +40,9 @@ func (c *fakeClient) DoWithContext(_ context.Context, query string, variables ma
 	cursor, _ := variables["cursor"].(string)
 	if search, ok := variables["search"].(string); ok {
 		c.searches = append(c.searches, search)
+	}
+	if since, ok := variables["since"].(string); ok {
+		c.since = append(c.since, since)
 	}
 
 	fixture, ok := c.fixtures[requestKey(query, id, cursor)]
@@ -426,5 +431,91 @@ func TestEveryItemHasURL(t *testing.T) {
 	}
 	if len(urls) == 0 || slices.Contains(urls, "") {
 		t.Errorf("urls = %q, want every item to have one", urls)
+	}
+}
+
+func fetchIssueChanges(t *testing.T) Activity {
+	t.Helper()
+	client := &fakeClient{t: t, fixtures: map[string]string{requestKey(activityQuery, "", ""): "synthetic_issue_changes.json"}}
+	got, err := fetchUpdated(context.Background(), client, testRepo, date(t, "2026-10-01T00:00:00Z"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	return got
+}
+
+func TestFetchUpdatedReadsIssueChanges(t *testing.T) {
+	got := fetchIssueChanges(t)
+
+	var events []string
+	for _, e := range got.IssueEvents {
+		events = append(events, fmt.Sprintf("#%d %s %s %q", e.IssueNumber, e.Kind, e.Actor, e.Detail))
+	}
+	want := []string{
+		`#10 closed luis "NOT_PLANNED"`,
+		`#10 reopened luis ""`,
+		`#10 assigned luis "me"`,
+		`#10 unassigned luis "bob"`,
+		`#10 renamed ana "New title"`,
+		`#10 labeled ana "blocked"`,
+		`#10 unlabeled ana "ready"`,
+		`#10 milestoned ana "v1"`,
+		`#10 demilestoned ana "v0"`,
+		`#10 edited ana ""`,
+		`#12 closed ghost "COMPLETED"`,
+	}
+	if !slices.Equal(events, want) {
+		t.Errorf("events =\n%s\nwant\n%s", strings.Join(events, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+func TestFetchUpdatedLinksIssueChanges(t *testing.T) {
+	got := fetchIssueChanges(t)
+
+	for _, e := range got.IssueEvents {
+		want := fmt.Sprintf("https://github.com/o/r/issues/%d", e.IssueNumber)
+		if e.Kind == "closed" {
+			want += map[int]string{10: "#event-1", 12: "#event-2"}[e.IssueNumber]
+		}
+		if e.URL != want || e.CreatedAt.IsZero() {
+			t.Errorf("event %+v, want URL %s and a time", e, want)
+		}
+	}
+}
+
+func TestFetchUpdatedStoresIssuesWithTheirAssignees(t *testing.T) {
+	got := fetchIssueChanges(t)
+
+	want := []Issue{
+		{Number: 10, Title: "Issue 10", URL: "https://github.com/o/r/issues/10", State: "OPEN", Assignees: []string{"me"}},
+		{Number: 11, Title: "Issue 11", URL: "https://github.com/o/r/issues/11", State: "OPEN", Assignees: []string{}},
+		{Number: 12, Title: "Issue 12", URL: "https://github.com/o/r/issues/12", State: "CLOSED", Assignees: []string{"me", "bob"}},
+	}
+	if !slices.EqualFunc(got.Issues, want, func(a, b Issue) bool {
+		return a.Number == b.Number && a.Title == b.Title && a.URL == b.URL && a.State == b.State && slices.Equal(a.Assignees, b.Assignees)
+	}) {
+		t.Errorf("issues = %+v, want %+v", got.Issues, want)
+	}
+}
+
+func TestFetchUpdatedWarnsWhenIssueChangesAreCut(t *testing.T) {
+	got := fetchIssueChanges(t)
+
+	want := "only the last 50 changes of https://github.com/o/r/issues/10 since the start of the window were read"
+	if !slices.Contains(got.Warnings, want) {
+		t.Errorf("warnings = %q", got.Warnings)
+	}
+}
+
+func TestFetchUpdatedAsksForIssueChangesSinceTheTimestamp(t *testing.T) {
+	client := &fakeClient{t: t, fixtures: map[string]string{requestKey(activityQuery, "", ""): "synthetic_issue_changes.json"}}
+	since := time.Date(2026, 10, 1, 2, 0, 0, 0, time.FixedZone("CST", -6*60*60))
+
+	if _, err := fetchUpdated(context.Background(), client, testRepo, since); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if want := []string{"2026-10-01T08:00:00Z"}; !slices.Equal(client.since, want) {
+		t.Errorf("since = %v, want %v", client.since, want)
 	}
 }

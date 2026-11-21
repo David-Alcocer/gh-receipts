@@ -79,6 +79,7 @@ func reviewRequestSection(repo repository.Repository, prs []activity.PullRequest
 func changeSections(a activity.Activity, info Info) []section {
 	base := repositoryURL(info.Repo)
 	all := []section{
+		issueChangesSection(info.Repo, a),
 		{
 			title:   "NEW COMMENTS ON YOUR PRS",
 			lines:   feedbackLines(a),

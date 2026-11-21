@@ -125,6 +125,16 @@
       "reviewUrl": ""
     }
   ],
+  "issues": [
+    {
+      "number": 4,
+      "title": "Issue 4",
+      "url": "https://github.com/o/r/issues/4",
+      "state": "",
+      "assignees": []
+    }
+  ],
+  "issueEvents": [],
   "failedChecks": [
     {
       "name": "legacy",

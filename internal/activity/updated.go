@@ -51,6 +51,39 @@ type updatedNode struct {
 	Reviews       backwardPage[reviewNode]
 	Comments      backwardPage[commentNode]
 	ReviewThreads backwardPage[threadNode]
+	// Only issues have these.
+	State         string
+	LastEditedAt  *time.Time
+	Editor        *actor
+	Assignees     struct{ Nodes []struct{ Login string } }
+	TimelineItems backwardPage[timelineNode]
+}
+
+// timelineNode is a change to an issue. Each type fills only its own fields.
+type timelineNode struct {
+	Typename     string `json:"__typename"`
+	CreatedAt    time.Time
+	Actor        *actor
+	URL          string
+	StateReason  string
+	Assignee     *struct{ Login string }
+	CurrentTitle string
+	Label        *struct{ Name string }
+	// MilestoneTitle is on both MilestonedEvent and DemilestonedEvent.
+	MilestoneTitle string
+}
+
+// timelineKinds maps GraphQL event types to IssueEvent kinds.
+var timelineKinds = map[string]string{
+	"ClosedEvent":       EventClosed,
+	"ReopenedEvent":     EventReopened,
+	"AssignedEvent":     EventAssigned,
+	"UnassignedEvent":   EventUnassigned,
+	"RenamedTitleEvent": EventRenamed,
+	"LabeledEvent":      EventLabeled,
+	"UnlabeledEvent":    EventUnlabeled,
+	"MilestonedEvent":   EventMilestoned,
+	"DemilestonedEvent": EventDemilestoned,
 }
 
 // fetchUpdated derives merged PRs, opened PRs, reviews and comments from one
@@ -60,7 +93,7 @@ func fetchUpdated(ctx context.Context, client GraphQLClient, repo repository.Rep
 
 	nodes, warnings, err := SearchAll(search, func(cursor interface{}) (SearchConnection[updatedNode], error) {
 		var response struct{ Search SearchConnection[updatedNode] }
-		variables := map[string]interface{}{"search": search, "cursor": cursor}
+		variables := map[string]interface{}{"search": search, "cursor": cursor, "since": since.UTC().Format(time.RFC3339)}
 		err := client.DoWithContext(ctx, activityQuery, variables, &response)
 		return response.Search, err
 	})
@@ -85,6 +118,7 @@ func addNode(ctx context.Context, client GraphQLClient, result *Activity, node u
 	result.Comments = append(result.Comments, comments...)
 
 	if node.Typename != "PullRequest" {
+		addIssue(result, node, since)
 		return nil
 	}
 
@@ -111,6 +145,50 @@ func addNode(ctx context.Context, client GraphQLClient, result *Activity, node u
 		result.OpenedPRs = append(result.OpenedPRs, pr)
 	}
 	return nil
+}
+
+// addIssue stores the issue and its changes by people since the given time.
+// The timeline is already limited to the window; the description edit is not,
+// and GitHub only says who edited it last.
+func addIssue(result *Activity, node updatedNode, since time.Time) {
+	assignees := make([]string, 0, len(node.Assignees.Nodes))
+	for _, assignee := range node.Assignees.Nodes {
+		assignees = append(assignees, assignee.Login)
+	}
+	result.Issues = append(result.Issues, Issue{Number: node.Number, Title: node.Title, URL: node.URL, State: node.State, Assignees: assignees})
+
+	if node.TimelineItems.PageInfo.HasPreviousPage {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("only the last 50 changes of %s since the start of the window were read", node.URL))
+	}
+	for _, item := range node.TimelineItems.Nodes {
+		kind, known := timelineKinds[item.Typename]
+		if !known || item.Actor.isBot() {
+			continue
+		}
+		event := IssueEvent{IssueNumber: node.Number, Kind: kind, Actor: item.Actor.login(), Detail: timelineDetail(item), CreatedAt: item.CreatedAt, URL: node.URL}
+		if item.URL != "" {
+			event.URL = item.URL
+		}
+		result.IssueEvents = append(result.IssueEvents, event)
+	}
+
+	if node.LastEditedAt != nil && !node.LastEditedAt.Before(since) && !node.Editor.isBot() {
+		result.IssueEvents = append(result.IssueEvents, IssueEvent{IssueNumber: node.Number, Kind: EventEdited, Actor: node.Editor.login(), CreatedAt: *node.LastEditedAt, URL: node.URL})
+	}
+}
+
+func timelineDetail(item timelineNode) string {
+	switch {
+	case item.StateReason != "":
+		return item.StateReason
+	case item.Assignee != nil:
+		return item.Assignee.Login
+	case item.CurrentTitle != "":
+		return item.CurrentTitle
+	case item.Label != nil:
+		return item.Label.Name
+	}
+	return item.MilestoneTitle
 }
 
 func fetchReviews(ctx context.Context, client GraphQLClient, node updatedNode, since time.Time) ([]Review, error) {
