@@ -1,8 +1,10 @@
 Last 14 days, Wed 21 Oct, 12:00 to Wed 4 Nov, 12:00 (calendar hours, bots excluded)
 
-PULL REQUESTS: 3 merged
+PULL REQUESTS
+  3 merged                                                       https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
   Median size: 150 lines, limit 400 lines, from 3 PRs            https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
   Median time to first review: 6 h, limit 24 h, from 2 of 3 PRs  https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
+  Merged without review: 1 of 3 PRs                              https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+review%3Anone+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
   Median time to merge: 49.3 h, over the 48 h limit, from 3 PRs  https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z
 
 STALE PRS: no activity for more than 2 days

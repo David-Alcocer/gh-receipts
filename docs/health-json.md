@@ -14,6 +14,7 @@ All medians come from the pull requests **merged** in the window. Pull requests 
 |---|---|
 | PR size | Additions plus deletions |
 | Time to first review | From opening the PR to the first submitted review by someone other than the author or a bot. Pending reviews don't count. A review by a deleted account counts |
+| Merged without review | Merged PRs without any review by someone other than the author or a bot: the PRs the time to first review leaves out |
 | Time to merge | From opening the PR to merging it |
 | Stale PRs | Open PRs whose last update is older than `staleDays`. Any update counts, such as a comment, a push or a label |
 | Issues per week | Issues opened and issues closed in each 7-day block, counted back from now. When `--days` isn't a multiple of 7, the oldest block is shorter |
@@ -60,6 +61,7 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `prSize` | Metric | In lines |
 | `firstReviewHours` | Metric | In hours |
 | `mergeHours` | Metric | In hours |
+| `mergedWithoutReview` | WithoutReview | PRs merged in the window without a review by someone else |
 | `stalePullRequests` | list of StalePullRequest | Least recently updated first, without the text report's limit of 10 |
 | `issueWeeks` | list of IssueWeek | Oldest first |
 | `warnings` | list of strings | Reasons the data may be incomplete |
@@ -67,6 +69,16 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 ### Thresholds
 
 `maxPRSize`, `maxFirstReviewHours`, `maxMergeHours` and `staleDays`, all numbers.
+
+### WithoutReview
+
+| Field | Type | Description |
+|---|---|---|
+| `count` | number | PRs merged in the window, without bots, that had no review by someone other than the author or a bot. `count` plus `firstReviewHours.count` equals `mergedPullRequests.count` |
+| `url` | string | Search for merged PRs with `review:none` |
+| `pullRequests` | list of objects | The exact PRs behind `count`, each with `number` and `url`. No logins |
+
+The search in `url` can list fewer PRs than `count`. GitHub counts any review, so a PR reviewed only by its author or by a bot, such as an automatic code reviewer, has a review for GitHub and none for `health`. It also includes PRs authored by bots. `pullRequests` is the exact list.
 
 ### Metric
 
@@ -104,4 +116,4 @@ GitHub search ranges include both ends, so an issue at the exact second where tw
 ## Limits
 
 - GitHub search returns at most 1,000 results. Larger windows on busy repositories add a warning.
-- Only the first 50 reviews of each PR are read. If none of them is by someone else, a warning names the PR.
+- Only the first 50 reviews of each PR are read. If none of them is by someone else, a warning names the PR, and it counts as merged without review.

@@ -21,18 +21,19 @@ const healthSchemaVersion = 1
 const weekLayout = "2 Jan"
 
 type healthDocument struct {
-	SchemaVersion      int                 `json:"schemaVersion"`
-	Repository         string              `json:"repository"`
-	Since              time.Time           `json:"since"`
-	Until              time.Time           `json:"until"`
-	Thresholds         healthThresholds    `json:"thresholds"`
-	MergedPullRequests mergedSummary       `json:"mergedPullRequests"`
-	PRSize             healthMetric        `json:"prSize"`
-	FirstReviewHours   healthMetric        `json:"firstReviewHours"`
-	MergeHours         healthMetric        `json:"mergeHours"`
-	StalePullRequests  []stalePullRequest  `json:"stalePullRequests"`
-	IssueWeeks         []issueWeekDocument `json:"issueWeeks"`
-	Warnings           []string            `json:"warnings"`
+	SchemaVersion       int                  `json:"schemaVersion"`
+	Repository          string               `json:"repository"`
+	Since               time.Time            `json:"since"`
+	Until               time.Time            `json:"until"`
+	Thresholds          healthThresholds     `json:"thresholds"`
+	MergedPullRequests  mergedSummary        `json:"mergedPullRequests"`
+	PRSize              healthMetric         `json:"prSize"`
+	FirstReviewHours    healthMetric         `json:"firstReviewHours"`
+	MergeHours          healthMetric         `json:"mergeHours"`
+	MergedWithoutReview withoutReviewSummary `json:"mergedWithoutReview"`
+	StalePullRequests   []stalePullRequest   `json:"stalePullRequests"`
+	IssueWeeks          []issueWeekDocument  `json:"issueWeeks"`
+	Warnings            []string             `json:"warnings"`
 }
 
 type healthThresholds struct {
@@ -45,6 +46,17 @@ type healthThresholds struct {
 type mergedSummary struct {
 	Count int    `json:"count"`
 	URL   string `json:"url"`
+}
+
+type withoutReviewSummary struct {
+	Count        int               `json:"count"`
+	URL          string            `json:"url"`
+	PullRequests []pullRequestLink `json:"pullRequests"`
+}
+
+type pullRequestLink struct {
+	Number int    `json:"number"`
+	URL    string `json:"url"`
 }
 
 type healthMetric struct {
@@ -78,6 +90,10 @@ func HealthJSON(w io.Writer, repo repository.Repository, h health.Health) error 
 	for _, pr := range h.StalePRs {
 		stale = append(stale, stalePullRequest{pr.Number, pr.Title, pr.URL, pr.Draft, pr.UpdatedAt, pr.IdleDays})
 	}
+	withoutReview := make([]pullRequestLink, 0, len(h.MergedWithoutReview))
+	for _, pr := range h.MergedWithoutReview {
+		withoutReview = append(withoutReview, pullRequestLink{pr.Number, pr.URL})
+	}
 	weeks := make([]issueWeekDocument, 0, len(h.IssueWeeks))
 	for _, week := range h.IssueWeeks {
 		weeks = append(weeks, issueWeekDocument{
@@ -108,9 +124,14 @@ func HealthJSON(w io.Writer, repo repository.Repository, h health.Health) error 
 		PRSize:             metricDocument(h.PRSize),
 		FirstReviewHours:   metricDocument(h.FirstReview),
 		MergeHours:         metricDocument(h.Merge),
-		StalePullRequests:  stale,
-		IssueWeeks:         weeks,
-		Warnings:           nonNil(h.Warnings),
+		MergedWithoutReview: withoutReviewSummary{
+			Count:        len(h.MergedWithoutReview),
+			URL:          withoutReviewSearchURL(repo, h.Window),
+			PullRequests: withoutReview,
+		},
+		StalePullRequests: stale,
+		IssueWeeks:        weeks,
+		Warnings:          nonNil(h.Warnings),
 	})
 	if err != nil {
 		return fmt.Errorf("write JSON: %w", err)
@@ -149,10 +170,12 @@ func healthSections(repo repository.Repository, h health.Health) []section {
 	staleURL := repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:open sort:updated-asc updated:<"+staleBefore.UTC().Format(health.SearchTimeLayout))
 	return []section{
 		{
-			title: fmt.Sprintf("PULL REQUESTS: %d merged", h.MergedPRs),
+			title: "PULL REQUESTS",
 			lines: []line{
+				{fmt.Sprintf("%d merged", h.MergedPRs), merged},
 				{metricText("Median size", h.PRSize, h.MergedPRs, "lines", formatLines, ""), merged},
 				{metricText("Median time to first review", h.FirstReview, h.MergedPRs, "h", formatHours, "a review by someone else"), merged},
+				{withoutReviewText(h), withoutReviewSearchURL(repo, h.Window)},
 				{metricText("Median time to merge", h.Merge, h.MergedPRs, "h", formatHours, ""), merged},
 			},
 			moreURL: merged,
@@ -191,6 +214,20 @@ func metricText(name string, m health.Metric, merged int, unit string, format fu
 	return fmt.Sprintf("%s: %s, %s, %s", name, value, limit, source)
 }
 
+// withoutReviewText counts the merged pull requests that the median time to first
+// review leaves out.
+func withoutReviewText(h health.Health) string {
+	const name = "Merged without review"
+	switch count := len(h.MergedWithoutReview); {
+	case h.MergedPRs == 0:
+		return name + ": no data, no PRs merged"
+	case count == 0:
+		return fmt.Sprintf("%s: none, all %s had one", name, plural(h.MergedPRs, "PR"))
+	default:
+		return fmt.Sprintf("%s: %d of %d PRs", name, count, h.MergedPRs)
+	}
+}
+
 func staleLines(h health.Health, staleURL string) []line {
 	if len(h.StalePRs) == 0 {
 		text := fmt.Sprintf("No open PRs without activity for more than %d days", h.Thresholds.StaleDays)
@@ -221,6 +258,13 @@ func issueWeekLines(repo repository.Repository, weeks []health.IssueWeek) []line
 
 func mergedSearchURL(repo repository.Repository, window health.Window) string {
 	return repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:merged merged:>="+window.Since.UTC().Format(health.SearchTimeLayout))
+}
+
+// withoutReviewSearchURL lists merged pull requests with no review at all. It can
+// list fewer than MergedWithoutReview: GitHub counts reviews by the author or by
+// bots, and health doesn't.
+func withoutReviewSearchURL(repo repository.Repository, window health.Window) string {
+	return repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:merged review:none merged:>="+window.Since.UTC().Format(health.SearchTimeLayout))
 }
 
 // issueSearchURL lists the issues of a week. GitHub ranges include both ends,
