@@ -31,6 +31,16 @@
     "limit": 48,
     "overLimit": true
   },
+  "mergedWithoutReview": {
+    "count": 1,
+    "url": "https://github.com/o/r/pulls?q=is%3Apr+is%3Amerged+review%3Anone+merged%3A%3E%3D2026-10-21T12%3A00%3A00Z",
+    "pullRequests": [
+      {
+        "number": 7,
+        "url": "https://github.com/o/r/pull/7"
+      }
+    ]
+  },
   "stalePullRequests": [
     {
       "number": 20,

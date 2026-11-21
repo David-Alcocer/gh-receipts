@@ -199,3 +199,21 @@ func describe(m Metric) string {
 	}
 	return fmt.Sprintf("{median %s, count %d, limit %d, over %t}", median, m.Count, m.Limit, m.OverLimit)
 }
+
+func TestComputeListsPullRequestsMergedWithoutReview(t *testing.T) {
+	unreviewed := merged(3, 300, 50)
+	unreviewed.URL = "https://github.com/o/r/pull/3"
+	outside := merged(4, 10, 1)
+	outside.MergedAt = window.Since.Add(-time.Hour)
+	data := Data{MergedPRs: []PullRequest{reviewed(merged(1, 100, 10), 2), unreviewed, outside}}
+
+	got := Compute(data, window, DefaultThresholds)
+
+	want := []Link{{Number: 3, URL: "https://github.com/o/r/pull/3"}}
+	if !slices.Equal(got.MergedWithoutReview, want) {
+		t.Errorf("merged without review = %+v, want %+v", got.MergedWithoutReview, want)
+	}
+	if len(got.MergedWithoutReview)+got.FirstReview.Count != got.MergedPRs {
+		t.Errorf("without review %d + reviewed %d != merged %d", len(got.MergedWithoutReview), got.FirstReview.Count, got.MergedPRs)
+	}
+}

@@ -91,9 +91,18 @@ type Health struct {
 	// FirstReview and Merge are in hours since the pull request was opened.
 	FirstReview Metric
 	Merge       Metric
-	StalePRs    []StalePullRequest
-	IssueWeeks  []IssueWeek
-	Warnings    []string
+	// MergedWithoutReview are the merged pull requests without a review by someone
+	// other than the author or a bot: the ones FirstReview leaves out.
+	MergedWithoutReview []Link
+	StalePRs            []StalePullRequest
+	IssueWeeks          []IssueWeek
+	Warnings            []string
+}
+
+// Link points to a pull request without naming anyone.
+type Link struct {
+	Number int
+	URL    string
 }
 
 // Metric is a median and the number of pull requests it comes from.
@@ -127,27 +136,31 @@ type IssueWeek struct {
 // Compute turns data into signals for the window.
 func Compute(data Data, window Window, thresholds Thresholds) Health {
 	var sizes, mergeHours, firstReviewHours []float64
+	var withoutReview []Link
 	for _, pr := range data.MergedPRs {
 		if !within(pr.MergedAt, window) {
 			continue
 		}
 		sizes = append(sizes, float64(pr.Additions+pr.Deletions))
 		mergeHours = append(mergeHours, pr.MergedAt.Sub(pr.CreatedAt).Hours())
-		if !pr.FirstReviewAt.IsZero() {
+		if pr.FirstReviewAt.IsZero() {
+			withoutReview = append(withoutReview, Link{Number: pr.Number, URL: pr.URL})
+		} else {
 			firstReviewHours = append(firstReviewHours, pr.FirstReviewAt.Sub(pr.CreatedAt).Hours())
 		}
 	}
 
 	return Health{
-		Window:      window,
-		Thresholds:  thresholds,
-		MergedPRs:   len(sizes),
-		PRSize:      metric(sizes, thresholds.MaxPRSize),
-		FirstReview: metric(firstReviewHours, thresholds.MaxFirstReviewHours),
-		Merge:       metric(mergeHours, thresholds.MaxMergeHours),
-		StalePRs:    stale(data.OpenPRs, window.Until, thresholds.StaleDays),
-		IssueWeeks:  issueWeeks(data.Issues, window),
-		Warnings:    data.Warnings,
+		Window:              window,
+		Thresholds:          thresholds,
+		MergedPRs:           len(sizes),
+		PRSize:              metric(sizes, thresholds.MaxPRSize),
+		FirstReview:         metric(firstReviewHours, thresholds.MaxFirstReviewHours),
+		Merge:               metric(mergeHours, thresholds.MaxMergeHours),
+		MergedWithoutReview: withoutReview,
+		StalePRs:            stale(data.OpenPRs, window.Until, thresholds.StaleDays),
+		IssueWeeks:          issueWeeks(data.Issues, window),
+		Warnings:            data.Warnings,
 	}
 }
 

@@ -16,12 +16,13 @@ func sampleHealth() health.Health {
 	since := healthUntil.AddDate(0, 0, -14)
 	size, review, merge := 150.0, 6.04, 49.25
 	return health.Health{
-		Window:      health.Window{Since: since, Until: healthUntil},
-		Thresholds:  health.DefaultThresholds,
-		MergedPRs:   3,
-		PRSize:      health.Metric{Median: &size, Count: 3, Limit: 400},
-		FirstReview: health.Metric{Median: &review, Count: 2, Limit: 24},
-		Merge:       health.Metric{Median: &merge, Count: 3, Limit: 48, OverLimit: true},
+		Window:              health.Window{Since: since, Until: healthUntil},
+		Thresholds:          health.DefaultThresholds,
+		MergedPRs:           3,
+		PRSize:              health.Metric{Median: &size, Count: 3, Limit: 400},
+		FirstReview:         health.Metric{Median: &review, Count: 2, Limit: 24},
+		Merge:               health.Metric{Median: &merge, Count: 3, Limit: 48, OverLimit: true},
+		MergedWithoutReview: []health.Link{{Number: 7, URL: "https://github.com/o/r/pull/7"}},
 		StalePRs: []health.StalePullRequest{
 			{OpenPullRequest: health.OpenPullRequest{Number: 20, Title: "Add\texport", URL: "https://github.com/o/r/pull/20", UpdatedAt: healthUntil.AddDate(0, 0, -6)}, IdleDays: 6},
 			{OpenPullRequest: health.OpenPullRequest{Number: 22, Title: "Try new layout", URL: "https://github.com/o/r/pull/22", Draft: true, UpdatedAt: healthUntil.AddDate(0, 0, -3)}, IdleDays: 3},
@@ -158,5 +159,74 @@ func TestHealthJSONUsesNullForNoData(t *testing.T) {
 		if string(document[list]) != "[]" {
 			t.Errorf("%s = %s, want []", list, document[list])
 		}
+	}
+}
+
+func TestHealthTextShowsPullRequestsMergedWithoutReview(t *testing.T) {
+	allReviewed := sampleHealth()
+	allReviewed.MergedWithoutReview = nil
+	allReviewed.FirstReview.Count = allReviewed.MergedPRs
+
+	tests := []struct {
+		name string
+		h    health.Health
+		want string
+	}{
+		{"some", sampleHealth(), "Merged without review: 1 of 3 PRs"},
+		{"none", allReviewed, "Merged without review: none, all 3 PRs had one"},
+		{"no PRs", emptyHealth(), "Merged without review: no data, no PRs merged"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := renderHealth(t, tt.h)
+			if !strings.Contains(got, tt.want) || !strings.Contains(got, "review%3Anone") {
+				t.Errorf("text =\n%s", got)
+			}
+		})
+	}
+}
+
+func TestHealthTextGivesTheMergedCountItsOwnLine(t *testing.T) {
+	got := renderHealth(t, sampleHealth())
+
+	if !strings.Contains(got, "\nPULL REQUESTS\n  3 merged ") || strings.Contains(got, "PULL REQUESTS:") {
+		t.Errorf("text =\n%s", got)
+	}
+}
+
+func TestHealthJSONListsPullRequestsMergedWithoutReview(t *testing.T) {
+	var out bytes.Buffer
+	if err := HealthJSON(&out, testRepo, sampleHealth()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var document struct {
+		MergedWithoutReview struct {
+			Count        int    `json:"count"`
+			URL          string `json:"url"`
+			PullRequests []struct {
+				Number int    `json:"number"`
+				URL    string `json:"url"`
+			} `json:"pullRequests"`
+		} `json:"mergedWithoutReview"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &document); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	got := document.MergedWithoutReview
+	if got.Count != 1 || len(got.PullRequests) != 1 || got.PullRequests[0].Number != 7 || !strings.Contains(got.URL, "review%3Anone") {
+		t.Errorf("mergedWithoutReview = %+v", got)
+	}
+}
+
+func TestHealthJSONUsesAnEmptyListWhenEveryPRHadAReview(t *testing.T) {
+	var out bytes.Buffer
+	if err := HealthJSON(&out, testRepo, emptyHealth()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(out.String(), `"pullRequests": []`) {
+		t.Errorf("JSON =\n%s", out.String())
 	}
 }
