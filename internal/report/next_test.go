@@ -83,7 +83,7 @@ func TestNextTextDescribesCheckAndReviewStates(t *testing.T) {
 
 	for _, tt := range tests {
 		pr := pending.PullRequest{CIState: tt.state, ReviewDecision: tt.decision}
-		if got := pullRequestStatus(pr); got != tt.want {
+		if got := pullRequestStatus(testRepo, pr); got != tt.want {
 			t.Errorf("status(%q, %q) = %q, want %q", tt.state, tt.decision, got, tt.want)
 		}
 	}
@@ -199,5 +199,92 @@ func TestNextJSONUsesEmptyLists(t *testing.T) {
 
 	if strings.Contains(out.String(), "null") {
 		t.Errorf("JSON = %s", out.String())
+	}
+}
+
+func planningPending() pending.Pending {
+	return pending.Pending{
+		PullRequests: []pending.PullRequest{
+			{Number: 44, Title: "Hook", URL: "https://github.com/o/r/pull/44", CIState: "SUCCESS", ReviewDecision: "APPROVED", MergeState: "BEHIND",
+				Closes: []pending.Dependency{{Number: 39, Repository: "o/r", State: "OPEN", URL: "https://github.com/o/r/issues/39"}}},
+			{Number: 45, Title: "Docs", URL: "https://github.com/o/r/pull/45", MergeState: "UNKNOWN"},
+		},
+		Issues: []pending.Issue{
+			{Number: 39, Title: "Signup", URL: "https://github.com/o/r/issues/39", Labels: []string{"priority:high", "front\x1b[2Jend"}},
+			{Number: 41, Title: "Limits", URL: "https://github.com/o/r/issues/41", Blocked: true, BlockedBy: []pending.Dependency{
+				{Number: 40, Repository: "o/r", State: "CLOSED", URL: "https://github.com/o/r/issues/40"},
+				{Number: 3, Repository: "o/other", State: "OPEN", URL: "https://github.com/o/other/issues/3"},
+				{Number: 38, Repository: "o/r", State: "OPEN", URL: "https://github.com/o/r/issues/38"},
+			}},
+		},
+	}
+}
+
+func TestNextTextShowsLabelsAndOpenBlockers(t *testing.T) {
+	got := renderNext(t, planningPending())
+
+	for _, want := range []string{
+		"#39 Signup  no criteria found  priority:high, front[2Jend  ",
+		"#41 Limits  no criteria found  blocked by o/other#3, #38  ",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "#40") || strings.Contains(got, "\x1b") {
+		t.Errorf("text shows a closed blocker or control characters:\n%s", got)
+	}
+}
+
+func TestNextTextShowsMergeStateAndClosedIssues(t *testing.T) {
+	got := renderNext(t, planningPending())
+
+	if !strings.Contains(got, "#44 Hook  CI passed, approved, behind base branch, closes #39  ") {
+		t.Errorf("text =\n%s", got)
+	}
+	if !strings.Contains(got, "#45 Docs  no CI, no review decision  ") {
+		t.Errorf("UNKNOWN should add nothing:\n%s", got)
+	}
+}
+
+func TestNextTextDescribesMergeStates(t *testing.T) {
+	tests := map[string]string{
+		"BEHIND":    "behind base branch",
+		"DIRTY":     "has conflicts",
+		"BLOCKED":   "blocked by branch rules",
+		"UNSTABLE":  "checks not passing",
+		"CLEAN":     "ready to merge",
+		"HAS_HOOKS": "ready to merge",
+		"NEW_STATE": "NEW_STATE",
+	}
+	for state, want := range tests {
+		got := renderNext(t, pending.Pending{PullRequests: []pending.PullRequest{{Number: 1, Title: "T", URL: "u", MergeState: state}}})
+		if !strings.Contains(got, ", "+want+"  ") {
+			t.Errorf("%s: text = %q, want %q", state, got, want)
+		}
+	}
+	for _, state := range []string{"", "UNKNOWN", "DRAFT"} {
+		got := renderNext(t, pending.Pending{PullRequests: []pending.PullRequest{{Number: 1, Title: "T", URL: "u", MergeState: state}}})
+		if !strings.Contains(got, "#1 T  no CI, no review decision  ") {
+			t.Errorf("%q should add nothing: %q", state, got)
+		}
+	}
+}
+
+func TestNextJSONIncludesPlanningFieldsWithEmptyLists(t *testing.T) {
+	p := pending.Pending{
+		PullRequests: []pending.PullRequest{{Number: 1}},
+		Issues:       []pending.Issue{{Number: 2}},
+	}
+	var out bytes.Buffer
+
+	if err := NextJSON(&out, testRepo, p); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, want := range []string{`"labels": []`, `"milestone": null`, `"blockedBy": []`, `"blocked": false`, `"mergeState": ""`, `"closes": []`} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("JSON missing %s:\n%s", want, out.String())
+		}
 	}
 }

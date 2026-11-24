@@ -221,3 +221,80 @@ func TestFetchWarnsAboutTruncatedSearches(t *testing.T) {
 		t.Errorf("warnings = %v", got.Warnings)
 	}
 }
+
+func fetchPlanning(t *testing.T) Pending {
+	t.Helper()
+	client := recordedClient(t)
+	client.fixtures["AssignedIssues|"] = "synthetic_issues_dependencies.json"
+	client.fixtures["OpenPullRequests|"] = "synthetic_pull_requests_merge.json"
+	got, err := FetchWith(context.Background(), client, testRepo)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	return got
+}
+
+func TestFetchReadsLabelsAndMilestones(t *testing.T) {
+	got := fetchPlanning(t)
+
+	first := got.Issues[0]
+	if !slices.Equal(first.Labels, []string{"priority:high", "frontend"}) || first.Milestone == nil || *first.Milestone != (Milestone{Title: "v1", URL: "https://github.com/o/r/milestone/1"}) {
+		t.Errorf("issue 39 = %+v", first)
+	}
+	if last := got.Issues[2]; last.Labels == nil || len(last.Labels) != 0 || last.Milestone != nil {
+		t.Errorf("issue 42 = %+v, want empty labels and no milestone", last)
+	}
+}
+
+func TestFetchReadsBlockingIssues(t *testing.T) {
+	got := fetchPlanning(t)
+
+	want := []Dependency{
+		{Number: 40, Repository: "o/r", State: "CLOSED", URL: "https://github.com/o/r/issues/40"},
+		{Number: 3, Repository: "o/other", State: "OPEN", URL: "https://github.com/o/other/issues/3"},
+	}
+	if !slices.Equal(got.Issues[1].BlockedBy, want) {
+		t.Errorf("blocked by = %+v, want %+v", got.Issues[1].BlockedBy, want)
+	}
+	if got.Issues[2].BlockedBy == nil {
+		t.Error("blocked by is nil, want an empty list")
+	}
+}
+
+func TestFetchIsBlockedOnlyByOpenIssues(t *testing.T) {
+	got := fetchPlanning(t)
+
+	if got.Issues[0].Blocked || !got.Issues[1].Blocked || got.Issues[2].Blocked {
+		t.Errorf("blocked = %t, %t, %t, want false, true, false", got.Issues[0].Blocked, got.Issues[1].Blocked, got.Issues[2].Blocked)
+	}
+}
+
+func TestFetchReadsMergeStateAndClosedIssues(t *testing.T) {
+	got := fetchPlanning(t)
+
+	byNumber := map[int]PullRequest{}
+	for _, pr := range got.PullRequests {
+		byNumber[pr.Number] = pr
+	}
+	behind := byNumber[44]
+	if behind.MergeState != "BEHIND" || !slices.Equal(behind.Closes, []Dependency{{Number: 39, Repository: "o/r", State: "OPEN", URL: "https://github.com/o/r/issues/39"}}) {
+		t.Errorf("PR 44 = %+v", behind)
+	}
+	if unknown := byNumber[45]; unknown.MergeState != "UNKNOWN" || unknown.Closes == nil {
+		t.Errorf("PR 45 = %+v, want UNKNOWN and an empty list", unknown)
+	}
+}
+
+func TestFetchWarnsWhenPlanningListsAreIncomplete(t *testing.T) {
+	got := fetchPlanning(t)
+
+	for _, want := range []string{
+		"only 2 of 3 issues blocking https://github.com/o/r/issues/41 could be read",
+		"only 0 of 12 issues closed by https://github.com/o/r/pull/45 could be read",
+		"only 1 of 25 labels of https://github.com/o/r/issues/41 could be read",
+	} {
+		if !slices.Contains(got.Warnings, want) {
+			t.Errorf("warnings = %q, missing %q", got.Warnings, want)
+		}
+	}
+}

@@ -27,7 +27,7 @@ With agents writing more code than ever, small teams lose track of what actually
 | Command | Answers | What it shows | Since |
 |---|---|---|---|
 | `gh receipts today` | *Where did we leave off?* | What changed since your last session: reviews waiting for you, new comments and reviews on your PRs, failed CI, merged PRs, Project board updates, with `--json` ([schema](docs/today-json.md)) | v0.1.0 |
-| `gh receipts next` | *What's next?* | Your open PRs, reviews waiting for you and assigned issues with their criteria, with `--json` ([schema](docs/next-json.md)) | v0.2.0 |
+| `gh receipts next` | *What's next?* | Your open PRs with their merge state, reviews waiting for you, and assigned issues with their criteria, labels and blockers, with `--json` ([schema](docs/next-json.md)) | v0.2.0 |
 | `gh receipts criteria <issue>` | *What does this issue need?* | An issue's acceptance criteria checklist, with `--json` ([schema](docs/criteria-json.md)) | v0.2.0 |
 | `gh receipts health` | *Is our flow getting stuck?* | Team flow signals: PR size, time to first review, PRs merged without review, time to merge, stale PRs, issues opened vs closed, with `--json` ([docs](docs/health-json.md)) | v0.3.0 |
 | `gh receipts context` | All of the above, for your agent | A short summary for a coding agent's session-start hook: what is waiting for you and what changed ([docs](docs/agent-hook.md)) | v0.4.0 |
