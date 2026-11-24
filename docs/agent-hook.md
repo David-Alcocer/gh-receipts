@@ -72,6 +72,42 @@ gh receipts next --json | jq -r '"Open PRs: \(.pullRequests|length). Reviews wai
 
 This needs `jq`. The cost: the agent knows how many things are waiting, not which ones, so it has to run `gh receipts next` or `context` to find out. That takes more steps and more tokens, and the titles still reach it then, only when it asks.
 
+## Keep the context fresh during a session
+
+`context` and `next` always read GitHub when they run. What goes stale is a copy: the summary from the start of the session, or `next --json` saved to a file. After the agent merges a pull request or closes an issue, that copy still lists it as pending, and an agent that keeps reading it plans from old facts.
+
+Tell the agent to ask again instead of reading a copy. A line in the team's agent file (`CLAUDE.md`, `AGENTS.md` or similar) is enough:
+
+```markdown
+After merging a pull request or closing an issue, run `gh receipts next` again before choosing what's next. Don't reuse earlier output or a saved file.
+```
+
+In Claude Code, a hook can do it without the agent remembering. This one runs after every `gh pr merge` or `gh issue close` the agent runs, and adds the new `next` to the agent's context:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -qE '(^|[;&|[:space:]])gh (pr merge|issue close)([[:space:]]|$)' || exit 0; gh receipts next | jq -Rs '{hookSpecificOutput: {hookEventName: \"PostToolUse\", additionalContext: (\"gh receipts next, after that change:\\n\" + .)}}'",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+- It needs `jq`. Claude Code passes the command the agent ran as JSON on standard input, and after a tool runs, only JSON with `additionalContext` reaches the agent; plain output doesn't.
+- Other commands pass through without running anything, because `grep` doesn't match them.
+- Merges and closes the developer does outside the agent, for example in the browser, don't trigger it. The line in the agent file covers those.
+- **GitHub's search takes a few seconds to catch up.** `next` finds open issues and pull requests with a search. In a test, the hook ran right after `gh issue close` and `next` still listed the closed issue; about 5 seconds later it was gone. If the new `next` still shows what was just merged or closed, that's the delay, not a pending item.
+
 ## Other agents
 
 `context` is a plain command with plain-text output, so any agent that can run a command when a session starts can use it the same way. If your agent has no hooks, tell it in its instructions file to run `gh receipts context` first; that depends on the agent following the instruction.

@@ -78,7 +78,14 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `url` | string | Search for merged PRs with `review:none` |
 | `pullRequests` | list of objects | The exact PRs behind `count`, each with `number` and `url`. No logins |
 
-The search in `url` can list fewer PRs than `count`. GitHub counts any review, so a PR reviewed only by its author or by a bot, such as an automatic code reviewer, has a review for GitHub and none for `health`. It also includes PRs authored by bots. `pullRequests` is the exact list.
+The search in `url` is a starting point, not the same list: it can list more PRs than `count`. `pullRequests` is the exact list. Checked against GitHub in November 2026, comparing the search with `health`'s rule on cli/cli, microsoft/vscode and vercel/next.js, the search also listed:
+
+- **PRs authored by bots,** which `health` leaves out. Example: [cli/cli#14275](https://github.com/cli/cli/pull/14275), by Dependabot.
+- **PRs whose only reviews by other people are comments.** For `health` a comment review is a review; for `review:none` it isn't. Example: [microsoft/vscode#349068](https://github.com/microsoft/vscode/pull/349068).
+- **PRs approved by people who can't push to the repository,** whose approval GitHub doesn't count. Example: [vercel/next.js#97787](https://github.com/vercel/next.js/pull/97787).
+- **At least one PR approved, before it was merged, by someone who can push,** with no explanation found. Example: [microsoft/vscode#349595](https://github.com/microsoft/vscode/pull/349595). GitHub doesn't document exactly what `review:none` matches.
+
+Reviews by the author or by bots, such as an automatic code reviewer, don't keep a PR out of the search, so they don't make it list fewer: on cli/cli, between 1 September and 22 November 2026, the search and `health` listed the same 8 PRs. If the search lists fewer, it's a case not seen yet.
 
 ### Metric
 
