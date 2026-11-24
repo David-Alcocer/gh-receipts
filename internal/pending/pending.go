@@ -20,7 +20,7 @@ const (
 	ciFailure              = "FAILURE"
 	ciError                = "ERROR"
 	reviewChangesRequested = "CHANGES_REQUESTED"
-	issueOpen              = "OPEN"
+	stateOpen              = "OPEN"
 	needsActionRank        = 0
 	otherPullRequestRank   = 1
 )
@@ -82,6 +82,7 @@ type Dependency struct {
 
 type pullRequestNode struct {
 	Number                  int
+	State                   string
 	Title                   string
 	URL                     string
 	IsDraft                 bool
@@ -99,6 +100,7 @@ type pullRequestNode struct {
 
 type issueNode struct {
 	Number int
+	State  string
 	Title  string
 	URL    string
 	Body   string
@@ -193,6 +195,9 @@ func fetchOpenPullRequests(ctx context.Context, client activity.GraphQLClient, r
 
 	pullRequests := make([]PullRequest, 0, len(nodes))
 	for _, node := range nodes {
+		if node.State != stateOpen {
+			continue
+		}
 		closes, closeWarnings := node.ClosingIssuesReferences.dependencies("closed by", node.URL)
 		warnings = append(warnings, closeWarnings...)
 		pullRequests = append(pullRequests, PullRequest{
@@ -220,6 +225,9 @@ func fetchAssignedIssues(ctx context.Context, client activity.GraphQLClient, rep
 
 	issues := make([]Issue, 0, len(nodes))
 	for _, node := range nodes {
+		if node.State != stateOpen {
+			continue
+		}
 		issue, issueWarnings := newIssue(node)
 		issues = append(issues, issue)
 		warnings = append(warnings, issueWarnings...)
@@ -245,7 +253,7 @@ func newIssue(node issueNode) (Issue, []string) {
 		Labels:    labels,
 		Milestone: node.Milestone,
 		BlockedBy: blockedBy,
-		Blocked:   slices.ContainsFunc(blockedBy, func(d Dependency) bool { return d.State == issueOpen }),
+		Blocked:   slices.ContainsFunc(blockedBy, func(d Dependency) bool { return d.State == stateOpen }),
 	}
 	return issue, append(warnings, blockedWarnings...)
 }

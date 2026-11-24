@@ -12,6 +12,7 @@
    "nodes": [
     {
      "number": 7,
+     "state": "OPEN",
      "title": "PR 7",
      "url": "https://github.com/o/r/pull/7",
      "author": {
@@ -21,6 +22,7 @@
     },
     {
      "number": 8,
+     "state": "OPEN",
      "title": "PR 8",
      "url": "https://github.com/o/r/pull/8",
      "author": {

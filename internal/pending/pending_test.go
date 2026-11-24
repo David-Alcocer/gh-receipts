@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -295,6 +296,45 @@ func TestFetchWarnsWhenPlanningListsAreIncomplete(t *testing.T) {
 	} {
 		if !slices.Contains(got.Warnings, want) {
 			t.Errorf("warnings = %q, missing %q", got.Warnings, want)
+		}
+	}
+}
+
+// GitHub's search lags a few seconds behind a close or a merge, but each result
+// already has its real state.
+func TestFetchLeavesOutItemsClosedAfterTheSearchIndexedThem(t *testing.T) {
+	client := recordedClient(t)
+	client.fixtures["AssignedIssues|"] = "synthetic_issues_closed.json"
+	client.fixtures["OpenPullRequests|"] = "synthetic_pull_requests_closed.json"
+
+	got, err := FetchWith(context.Background(), client, testRepo)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(got.Issues) != 1 || got.Issues[0].Number != 50 {
+		t.Errorf("issues = %+v, want only #50", got.Issues)
+	}
+	if len(got.PullRequests) != 1 || got.PullRequests[0].Number != 60 {
+		t.Errorf("pull requests = %+v, want only #60", got.PullRequests)
+	}
+	if len(got.Warnings) != 0 {
+		t.Errorf("warnings = %v, want none", got.Warnings)
+	}
+}
+
+// The fake client ignores the query text, so without this test a query that
+// stopped asking for state would leave next empty.
+func TestSearchQueriesAskForTheState(t *testing.T) {
+	tests := []struct{ name, query, kind string }{
+		{"OpenPullRequests", openPullRequestsQuery, "PullRequest"},
+		{"AssignedIssues", assignedIssuesQuery, "Issue"},
+	}
+
+	for _, tt := range tests {
+		pattern := regexp.MustCompile(`\.\.\. on ` + tt.kind + ` \{[^{}]*\bstate\b`)
+		if !pattern.MatchString(tt.query) {
+			t.Errorf("%s doesn't ask for the %s state", tt.name, tt.kind)
 		}
 	}
 }

@@ -1,0 +1,9 @@
+{"data": {"viewer": {"login": "octocat"}, "search": {
+  "issueCount": 3,
+  "pageInfo": {"hasNextPage": false, "endCursor": null},
+  "nodes": [
+    {"number": 21, "state": "MERGED", "title": "Merged a moment ago", "url": "https://github.com/o/r/pull/21", "author": {"__typename": "User", "login": "ana"}},
+    {"number": 22, "state": "CLOSED", "title": "Closed a moment ago", "url": "https://github.com/o/r/pull/22", "author": {"__typename": "User", "login": "ana"}},
+    {"number": 20, "state": "OPEN", "title": "Still open", "url": "https://github.com/o/r/pull/20", "author": {"__typename": "User", "login": "ana"}}
+  ]
+}}}

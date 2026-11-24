@@ -9,10 +9,14 @@ import (
 
 type reviewRequestNode struct {
 	Number int
+	State  string
 	Title  string
 	URL    string
 	Author *actor
 }
+
+// pullRequestOpen is the state of an open pull request.
+const pullRequestOpen = "OPEN"
 
 type ReviewRequests struct {
 	Viewer       string
@@ -42,7 +46,9 @@ func FetchReviewRequests(ctx context.Context, client GraphQLClient, repo reposit
 
 	var pullRequests []PullRequest
 	for _, node := range nodes {
-		if node.Author.isBot() {
+		// The search lags a few seconds behind a merge or a close; the state
+		// doesn't.
+		if node.State != pullRequestOpen || node.Author.isBot() {
 			continue
 		}
 		pullRequests = append(pullRequests, PullRequest{

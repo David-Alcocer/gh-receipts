@@ -1,0 +1,13 @@
+{
+  "data": {
+    "search": {
+      "issueCount": 3,
+      "pageInfo": { "hasNextPage": false, "endCursor": null },
+      "nodes": [
+        { "number": 61, "state": "MERGED", "title": "Merged a moment ago", "url": "https://github.com/o/r/pull/61", "commits": { "nodes": [] } },
+        { "number": 60, "state": "OPEN", "title": "Still open", "url": "https://github.com/o/r/pull/60", "commits": { "nodes": [] } },
+        { "number": 62, "state": "CLOSED", "title": "Closed a moment ago", "url": "https://github.com/o/r/pull/62", "commits": { "nodes": [] } }
+      ]
+    }
+  }
+}
