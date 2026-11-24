@@ -17,7 +17,7 @@ import (
 
 // nextSchemaVersion changes when the JSON output changes in an incompatible way.
 // docs/next-json.md documents the schema.
-const nextSchemaVersion = 1
+const nextSchemaVersion = 2
 
 type nextDocument struct {
 	SchemaVersion  int                    `json:"schemaVersion"`

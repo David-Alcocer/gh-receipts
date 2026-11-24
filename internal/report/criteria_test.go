@@ -159,7 +159,7 @@ func TestCriteriaJSON(t *testing.T) {
 	}
 
 	want := `{
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "repository": "o/r",
   "number": 5,
   "title": "Parser",
@@ -178,6 +178,19 @@ func TestCriteriaJSON(t *testing.T) {
 `
 	if got := out.String(); got != want {
 		t.Errorf("JSON =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestCriteriaJSONHasNoCheckedValueForPlainItems(t *testing.T) {
+	var out bytes.Buffer
+	issue := testIssue(criteria.Parse("## Criterios de aceptación\n- Primero\n"))
+
+	if err := CriteriaJSON(&out, testRepo, issue); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if want := `"checked": null,`; !strings.Contains(out.String(), want) {
+		t.Errorf("JSON =\n%s\nwant to contain %s", out.String(), want)
 	}
 }
 

@@ -176,7 +176,7 @@ func TestNextJSONIsComplete(t *testing.T) {
 	if err := json.Unmarshal(out.Bytes(), &document); err != nil {
 		t.Fatal(err)
 	}
-	if document.SchemaVersion != 1 || document.Repository != "o/r" || document.Viewer != "octocat" || len(document.Warnings) != 1 {
+	if document.SchemaVersion != 2 || document.Repository != "o/r" || document.Viewer != "octocat" || len(document.Warnings) != 1 {
 		t.Errorf("document = %+v", document)
 	}
 	if document.PullRequests[0].CIState != "FAILURE" || document.PullRequests[0].ReviewDecision != "CHANGES_REQUESTED" || !document.PullRequests[1].Draft {
@@ -286,5 +286,35 @@ func TestNextJSONIncludesPlanningFieldsWithEmptyLists(t *testing.T) {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("JSON missing %s:\n%s", want, out.String())
 		}
+	}
+}
+
+func TestNextJSONHasNoCheckedValueForPlainItems(t *testing.T) {
+	p := pending.Pending{Issues: []pending.Issue{
+		{Number: 1, Criteria: criteria.Parse("## Acceptance criteria\n- [ ] Box\n")},
+		{Number: 2, Criteria: criteria.Parse("## Acceptance criteria\n- Plain\n")},
+	}}
+	var out bytes.Buffer
+
+	if err := NextJSON(&out, testRepo, p); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var document struct {
+		Issues []struct {
+			Criteria struct {
+				Items []map[string]any
+			}
+		}
+	}
+	if err := json.Unmarshal(out.Bytes(), &document); err != nil {
+		t.Fatal(err)
+	}
+	box, plain := document.Issues[0].Criteria.Items[0], document.Issues[1].Criteria.Items[0]
+	if box["checked"] != false || plain["checked"] != nil {
+		t.Errorf("box = %v, plain = %v", box, plain)
+	}
+	if _, ok := plain["checked"]; !ok {
+		t.Errorf("plain item has no checked field: %v", plain)
 	}
 }
