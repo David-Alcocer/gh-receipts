@@ -20,6 +20,7 @@ const (
 	ciFailure              = "FAILURE"
 	ciError                = "ERROR"
 	reviewChangesRequested = "CHANGES_REQUESTED"
+	issueOpen              = "OPEN"
 	needsActionRank        = 0
 	otherPullRequestRank   = 1
 )
@@ -44,23 +45,50 @@ type PullRequest struct {
 	Draft          bool   `json:"draft"`
 	CIState        string `json:"ciState"`
 	ReviewDecision string `json:"reviewDecision"`
+	// MergeState is GitHub's mergeStateStatus, such as BEHIND or UNKNOWN while
+	// GitHub computes it.
+	MergeState string       `json:"mergeState"`
+	Closes     []Dependency `json:"closes"`
 }
 
-// Issue is an open issue assigned to the viewer.
+// Issue is an open issue assigned to the viewer. Labels come as they are named:
+// ranking them is up to each team.
 type Issue struct {
-	Number   int             `json:"number"`
-	Title    string          `json:"title"`
-	URL      string          `json:"url"`
-	Criteria criteria.Result `json:"criteria"`
+	Number    int             `json:"number"`
+	Title     string          `json:"title"`
+	URL       string          `json:"url"`
+	Criteria  criteria.Result `json:"criteria"`
+	Labels    []string        `json:"labels"`
+	Milestone *Milestone      `json:"milestone"`
+	// BlockedBy are GitHub's native "blocked by" relations, open or closed.
+	BlockedBy []Dependency `json:"blockedBy"`
+	// Blocked is true when at least one issue in BlockedBy is open.
+	Blocked bool `json:"blocked"`
+}
+
+// Milestone is the milestone an issue belongs to.
+type Milestone struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
+// Dependency is another issue, possibly in another repository, and its state.
+type Dependency struct {
+	Number     int    `json:"number"`
+	Repository string `json:"repository"`
+	State      string `json:"state"`
+	URL        string `json:"url"`
 }
 
 type pullRequestNode struct {
-	Number         int
-	Title          string
-	URL            string
-	IsDraft        bool
-	ReviewDecision string
-	Commits        struct {
+	Number                  int
+	Title                   string
+	URL                     string
+	IsDraft                 bool
+	ReviewDecision          string
+	MergeStateStatus        string
+	ClosingIssuesReferences dependencyConnection
+	Commits                 struct {
 		Nodes []struct {
 			Commit struct {
 				StatusCheckRollup *struct{ State string }
@@ -74,6 +102,36 @@ type issueNode struct {
 	Title  string
 	URL    string
 	Body   string
+	Labels struct {
+		TotalCount int
+		Nodes      []struct{ Name string }
+	}
+	Milestone *Milestone
+	BlockedBy dependencyConnection
+}
+
+type dependencyConnection struct {
+	TotalCount int
+	Nodes      []struct {
+		Number     int
+		State      string
+		URL        string
+		Repository struct{ NameWithOwner string }
+	}
+}
+
+// dependencies returns the issues in the connection, and a warning when GitHub
+// counted more than it returned: past the page size, or not visible to the
+// viewer.
+func (c dependencyConnection) dependencies(what, url string) ([]Dependency, []string) {
+	result := make([]Dependency, 0, len(c.Nodes))
+	for _, node := range c.Nodes {
+		result = append(result, Dependency{Number: node.Number, Repository: node.Repository.NameWithOwner, State: node.State, URL: node.URL})
+	}
+	if c.TotalCount > len(result) {
+		return result, []string{fmt.Sprintf("only %d of %d issues %s %s could be read", len(result), c.TotalCount, what, url)}
+	}
+	return result, nil
 }
 
 // Fetch returns the viewer's open work in repo.
@@ -135,6 +193,8 @@ func fetchOpenPullRequests(ctx context.Context, client activity.GraphQLClient, r
 
 	pullRequests := make([]PullRequest, 0, len(nodes))
 	for _, node := range nodes {
+		closes, closeWarnings := node.ClosingIssuesReferences.dependencies("closed by", node.URL)
+		warnings = append(warnings, closeWarnings...)
 		pullRequests = append(pullRequests, PullRequest{
 			Number:         node.Number,
 			Title:          node.Title,
@@ -142,6 +202,8 @@ func fetchOpenPullRequests(ctx context.Context, client activity.GraphQLClient, r
 			Draft:          node.IsDraft,
 			CIState:        ciState(node),
 			ReviewDecision: node.ReviewDecision,
+			MergeState:     node.MergeStateStatus,
+			Closes:         closes,
 		})
 	}
 	return pullRequests, warnings, nil
@@ -158,9 +220,34 @@ func fetchAssignedIssues(ctx context.Context, client activity.GraphQLClient, rep
 
 	issues := make([]Issue, 0, len(nodes))
 	for _, node := range nodes {
-		issues = append(issues, Issue{Number: node.Number, Title: node.Title, URL: node.URL, Criteria: criteria.Parse(node.Body)})
+		issue, issueWarnings := newIssue(node)
+		issues = append(issues, issue)
+		warnings = append(warnings, issueWarnings...)
 	}
 	return issues, warnings, nil
+}
+
+func newIssue(node issueNode) (Issue, []string) {
+	labels := make([]string, 0, len(node.Labels.Nodes))
+	for _, label := range node.Labels.Nodes {
+		labels = append(labels, label.Name)
+	}
+	var warnings []string
+	if node.Labels.TotalCount > len(labels) {
+		warnings = append(warnings, fmt.Sprintf("only %d of %d labels of %s could be read", len(labels), node.Labels.TotalCount, node.URL))
+	}
+	blockedBy, blockedWarnings := node.BlockedBy.dependencies("blocking", node.URL)
+	issue := Issue{
+		Number:    node.Number,
+		Title:     node.Title,
+		URL:       node.URL,
+		Criteria:  criteria.Parse(node.Body),
+		Labels:    labels,
+		Milestone: node.Milestone,
+		BlockedBy: blockedBy,
+		Blocked:   slices.ContainsFunc(blockedBy, func(d Dependency) bool { return d.State == issueOpen }),
+	}
+	return issue, append(warnings, blockedWarnings...)
 }
 
 func searchPage[T any](ctx context.Context, client activity.GraphQLClient, query, search string, cursor interface{}) (activity.SearchConnection[T], error) {

@@ -23,6 +23,8 @@ const (
         url
         isDraft
         reviewDecision
+        mergeStateStatus
+        closingIssuesReferences(first: 10) { ...dependencies }
         commits(last: 1) {
           nodes {
             commit {
@@ -34,7 +36,7 @@ const (
     }
   }
 }
-`
+` + dependenciesFragment
 
 	assignedIssuesQuery = `query AssignedIssues($search: String!, $cursor: String) {
   search(query: $search, type: ISSUE, first: 25, after: $cursor) {
@@ -46,9 +48,18 @@ const (
         title
         url
         body
+        labels(first: 20) { totalCount nodes { name } }
+        milestone { title url }
+        blockedBy(first: 20) { ...dependencies }
       }
     }
   }
+}
+` + dependenciesFragment
+
+	dependenciesFragment = `fragment dependencies on IssueConnection {
+  totalCount
+  nodes { number state url repository { nameWithOwner } }
 }
 `
 )

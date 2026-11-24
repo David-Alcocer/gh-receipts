@@ -1,0 +1,52 @@
+{
+  "data": {
+    "search": {
+      "issueCount": 2,
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": null
+      },
+      "nodes": [
+        {
+          "number": 44,
+          "title": "PR 44",
+          "url": "https://github.com/o/r/pull/44",
+          "isDraft": false,
+          "reviewDecision": null,
+          "mergeStateStatus": "BEHIND",
+          "commits": {
+            "nodes": []
+          },
+          "closingIssuesReferences": {
+            "totalCount": 1,
+            "nodes": [
+              {
+                "number": 39,
+                "state": "OPEN",
+                "url": "https://github.com/o/r/issues/39",
+                "repository": {
+                  "nameWithOwner": "o/r"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": 45,
+          "title": "PR 45",
+          "url": "https://github.com/o/r/pull/45",
+          "isDraft": false,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNKNOWN",
+          "commits": {
+            "nodes": []
+          },
+          "closingIssuesReferences": {
+            "totalCount": 12,
+            "nodes": []
+          }
+        }
+      ]
+    }
+  }
+}
