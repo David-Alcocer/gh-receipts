@@ -1,0 +1,12 @@
+{
+  "data": {
+    "search": {
+      "issueCount": 2,
+      "pageInfo": { "hasNextPage": false, "endCursor": null },
+      "nodes": [
+        { "number": 51, "state": "CLOSED", "title": "Closed a moment ago", "url": "https://github.com/o/r/issues/51", "body": "" },
+        { "number": 50, "state": "OPEN", "title": "Still open", "url": "https://github.com/o/r/issues/50", "body": "" }
+      ]
+    }
+  }
+}

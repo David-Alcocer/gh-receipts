@@ -173,6 +173,7 @@ fragment threadCommentPage on PullRequestReviewCommentConnection {
     nodes {
       ... on PullRequest {
         number
+        state
         title
         url
         author { __typename login }

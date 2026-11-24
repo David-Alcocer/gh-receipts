@@ -106,7 +106,7 @@ In Claude Code, a hook can do it without the agent remembering. This one runs af
 - It needs `jq`. Claude Code passes the command the agent ran as JSON on standard input, and after a tool runs, only JSON with `additionalContext` reaches the agent; plain output doesn't.
 - Other commands pass through without running anything, because `grep` doesn't match them.
 - Merges and closes the developer does outside the agent, for example in the browser, don't trigger it. The line in the agent file covers those.
-- **GitHub's search takes a few seconds to catch up.** `next` finds open issues and pull requests with a search. In a test, the hook ran right after `gh issue close` and `next` still listed the closed issue; about 5 seconds later it was gone. If the new `next` still shows what was just merged or closed, that's the delay, not a pending item.
+- **GitHub's search takes a few seconds to catch up,** so for about 5 seconds after a close or a merge it still returns the item as open. Each result already carries its real state, though, so `next` leaves out pull requests and issues that GitHub reports as closed or merged, including reviews waiting for you on a pull request someone else just merged.
 
 ## Other agents
 

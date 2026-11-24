@@ -9,6 +9,7 @@
       "nodes": [
         {
           "number": 39,
+          "state": "OPEN",
           "title": "Issue 39",
           "url": "https://github.com/o/r/issues/39",
           "body": "## Acceptance criteria\n- [ ] A\n",
@@ -43,6 +44,7 @@
         },
         {
           "number": 41,
+          "state": "OPEN",
           "title": "Issue 41",
           "url": "https://github.com/o/r/issues/41",
           "body": "## Acceptance criteria\n- [ ] A\n",
@@ -79,6 +81,7 @@
         },
         {
           "number": 42,
+          "state": "OPEN",
           "title": "Issue 42",
           "url": "https://github.com/o/r/issues/42",
           "body": "## Acceptance criteria\n- [ ] A\n",

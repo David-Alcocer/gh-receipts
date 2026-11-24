@@ -9,6 +9,7 @@
       "nodes": [
         {
           "number": 44,
+          "state": "OPEN",
           "title": "PR 44",
           "url": "https://github.com/o/r/pull/44",
           "isDraft": false,
@@ -33,6 +34,7 @@
         },
         {
           "number": 45,
+          "state": "OPEN",
           "title": "PR 45",
           "url": "https://github.com/o/r/pull/45",
           "isDraft": false,

@@ -21,7 +21,7 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 | `defaultBranch` | string | Default branch; empty in a repository without commits |
 | `mergedPRs` | list of PullRequest | PRs merged since `since` |
 | `openedPRs` | list of PullRequest | PRs opened since `since` |
-| `reviewRequests` | list of PullRequest | Open PRs requesting the viewer's review, whenever they were opened |
+| `reviewRequests` | list of PullRequest | Open PRs requesting the viewer's review, whenever they were opened. PRs GitHub already reports as merged or closed are left out, even in the few seconds the search still returns them |
 | `reviews` | list of Review | Reviews submitted since `since` |
 | `comments` | list of Comment | Conversation and inline comments since `since` |
 | `issues` | list of Issue | Issues updated since `since`, so a reader can tell whose they are |

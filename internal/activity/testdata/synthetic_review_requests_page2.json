@@ -12,6 +12,7 @@
    "nodes": [
     {
      "number": 9,
+     "state": "OPEN",
      "title": "PR 9",
      "url": "https://github.com/o/r/pull/9",
      "author": null

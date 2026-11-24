@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -345,6 +346,34 @@ func TestFetchReviewRequestsAcrossPages(t *testing.T) {
 	}
 	if want := "repo:o/r is:pr is:open review-requested:@me"; client.searches[0] != want {
 		t.Errorf("search = %q, want %q", client.searches[0], want)
+	}
+}
+
+// GitHub's search lags a few seconds behind a merge or a close, but each result
+// already has its real state.
+func TestFetchReviewRequestsLeavesOutClosedPullRequests(t *testing.T) {
+	client := &fakeClient{t: t, fixtures: map[string]string{
+		requestKey(reviewRequestsQuery, "", ""): "synthetic_review_requests_closed.json",
+	}}
+
+	got, err := FetchReviewRequests(context.Background(), client, testRepo)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if want := []int{20}; !slices.Equal(prNumbers(got.PullRequests), want) {
+		t.Errorf("review requests = %v, want %v", prNumbers(got.PullRequests), want)
+	}
+	if len(got.Warnings) != 0 {
+		t.Errorf("warnings = %v, want none", got.Warnings)
+	}
+}
+
+// The fake client ignores the query text, so without this test a query that
+// stopped asking for state would leave every review request out.
+func TestReviewRequestsQueryAsksForTheState(t *testing.T) {
+	if !regexp.MustCompile(`\.\.\. on PullRequest \{[^{}]*\bstate\b`).MatchString(reviewRequestsQuery) {
+		t.Error("reviewRequestsQuery doesn't ask for the pull request state")
 	}
 }
 

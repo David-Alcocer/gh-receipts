@@ -19,6 +19,7 @@ const (
     nodes {
       ... on PullRequest {
         number
+        state
         title
         url
         isDraft
@@ -45,6 +46,7 @@ const (
     nodes {
       ... on Issue {
         number
+        state
         title
         url
         body
