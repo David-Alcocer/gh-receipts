@@ -2,6 +2,8 @@
 package criteria
 
 import (
+	"bytes"
+	"encoding/json"
 	"regexp"
 	"strings"
 )
@@ -30,6 +32,26 @@ type Item struct {
 	Checked  bool   `json:"checked"`
 	Depth    int    `json:"depth"`
 	Checkbox bool   `json:"checkbox"`
+}
+
+// MarshalJSON writes checked as null for a plain item, because false read as
+// "not done" to agents. docs/decisions/0015-criteria-checked-null.md explains it.
+func (i Item) MarshalJSON() ([]byte, error) {
+	var checked *bool
+	if i.Checkbox {
+		checked = &i.Checked
+	}
+	// json.Marshal would escape <, > and &. The caller's encoder decides that.
+	var out bytes.Buffer
+	encoder := json.NewEncoder(&out)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(struct {
+		Text     string `json:"text"`
+		Checked  *bool  `json:"checked"`
+		Depth    int    `json:"depth"`
+		Checkbox bool   `json:"checkbox"`
+	}{i.Text, checked, i.Depth, i.Checkbox})
+	return out.Bytes(), err
 }
 
 // Result is what an issue body says about its criteria. Found is false when

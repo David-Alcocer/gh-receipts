@@ -8,7 +8,7 @@ Without `--json`, `criteria` prints each item in full. An item longer than 64 ch
 
 ## Schema
 
-The current `schemaVersion` is `1`. Fields are only removed, renamed or changed in meaning when that number goes up. `items` is `[]` when empty, never `null`.
+The current `schemaVersion` is `2`. Fields are only removed, renamed or changed in meaning when that number goes up. `items` is `[]` when empty, never `null`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -23,12 +23,16 @@ The current `schemaVersion` is `1`. Fields are only removed, renamed or changed 
 
 An issue with no section has `found: false`. A section with no items has `found: true` and an empty `items`.
 
+### Changes from version 1
+
+In version 1, a plain item had `checked: false`, which read as "not done". In version 2 it has `checked: null`. A reader of version 1 that tells the two kinds apart with `checkbox` keeps working once it accepts `null`; one that only reads `checked` should treat `null` as "can't tell" rather than "not done". Nothing else changed.
+
 ### Item
 
 | Field | Type | Description |
 |---|---|---|
 | `text` | string | First line of the item, as written in Markdown |
-| `checked` | boolean | Whether the box is ticked; always `false` for a plain item |
+| `checked` | boolean or `null` | Whether the box is ticked; `null` for a plain item, which has no box |
 | `depth` | number | `0` for top-level items; each nested list adds one |
 | `checkbox` | boolean | `true` for a checkbox, `false` for a plain list item, which can't be checked |
 

@@ -6,7 +6,7 @@
 
 ## Schema
 
-The current `schemaVersion` is `1`. Fields are only removed, renamed or changed in meaning when that number goes up. Lists are `[]` when empty, never `null`.
+The current `schemaVersion` is `2`. Fields are only removed, renamed or changed in meaning when that number goes up. Lists are `[]` when empty, never `null`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -75,7 +75,11 @@ id=$(gh api repos/OWNER/REPO/issues/12 --jq .id)
 gh api repos/OWNER/REPO/issues/15/dependencies/blocked_by -F issue_id=$id
 ```
 
-`criteria` has `found` and `items`, as described in [`criteria --json`](criteria-json.md). Unchecked criteria are the items with `checkbox: true` and `checked: false`. Items with `checkbox: false` are plain list items, which can't be checked.
+`criteria` has `found` and `items`, as described in [`criteria --json`](criteria-json.md). Unchecked criteria are the items with `checked: false`. Plain list items have `checked: null` and `checkbox: false`: they can't be checked, so they say nothing about whether the work is done.
+
+### Changes from version 1
+
+The only change is in `criteria`: a plain item's `checked` was `false` and is now `null`. See [`criteria --json`](criteria-json.md#changes-from-version-1).
 
 ## Order
 

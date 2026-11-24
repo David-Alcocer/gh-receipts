@@ -14,7 +14,7 @@ import (
 
 // criteriaSchemaVersion changes when the JSON output changes in an incompatible
 // way. docs/criteria-json.md documents the schema.
-const criteriaSchemaVersion = 1
+const criteriaSchemaVersion = 2
 
 type criteriaDocument struct {
 	SchemaVersion int             `json:"schemaVersion"`

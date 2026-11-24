@@ -1,6 +1,8 @@
 package criteria
 
 import (
+	"bytes"
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -185,5 +187,40 @@ func TestChecked(t *testing.T) {
 
 	if got := result.Checked(); got != 2 {
 		t.Errorf("Checked() = %d, want 2", got)
+	}
+}
+
+func TestItemJSONHasNoCheckedValueForPlainItems(t *testing.T) {
+	tests := []struct {
+		item Item
+		want string
+	}{
+		{Item{Text: "A", Checkbox: true, Checked: true}, `{"text":"A","checked":true,"depth":0,"checkbox":true}`},
+		{Item{Text: "A", Checkbox: true}, `{"text":"A","checked":false,"depth":0,"checkbox":true}`},
+		{Item{Text: "A", Depth: 1}, `{"text":"A","checked":null,"depth":1,"checkbox":false}`},
+	}
+
+	for _, tt := range tests {
+		got, err := json.Marshal(tt.item)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if string(got) != tt.want {
+			t.Errorf("JSON = %s, want %s", got, tt.want)
+		}
+	}
+}
+
+func TestItemJSONLeavesHTMLEscapingToTheEncoder(t *testing.T) {
+	var out bytes.Buffer
+	encoder := json.NewEncoder(&out)
+	encoder.SetEscapeHTML(false)
+
+	if err := encoder.Encode(Item{Text: "<b> & </b>"}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if want := `{"text":"<b> & </b>","checked":null,"depth":0,"checkbox":false}` + "\n"; out.String() != want {
+		t.Errorf("JSON = %s, want %s", out.String(), want)
 	}
 }
