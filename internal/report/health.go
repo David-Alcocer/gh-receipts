@@ -260,9 +260,9 @@ func mergedSearchURL(repo repository.Repository, window health.Window) string {
 	return repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:merged merged:>="+window.Since.UTC().Format(health.SearchTimeLayout))
 }
 
-// withoutReviewSearchURL lists merged pull requests with no review at all. It can
-// list fewer than MergedWithoutReview: GitHub counts reviews by the author or by
-// bots, and health doesn't.
+// withoutReviewSearchURL lists merged pull requests GitHub sees as not reviewed.
+// It can list more than MergedWithoutReview, for example PRs by bots or with only
+// comment reviews. docs/health-json.md lists the cases found.
 func withoutReviewSearchURL(repo repository.Repository, window health.Window) string {
 	return repositoryURL(repo) + "/pulls?q=" + url.QueryEscape("is:pr is:merged review:none merged:>="+window.Since.UTC().Format(health.SearchTimeLayout))
 }
